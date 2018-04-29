@@ -11,10 +11,10 @@ import SettingsScreen from '../screens/SettingsScreen';
 
 export default TabNavigator(
   {
-    Home: {
+    Inbox: {
       screen: HomeScreen,
     },
-    Links: {
+    Tricks: {
       screen: LinksScreen,
     },
     Settings: {
@@ -53,6 +53,7 @@ export default TabNavigator(
     tabBarComponent: TabBarBottom,
     tabBarPosition: 'bottom',
     animationEnabled: false,
+    headerMode: 'none',
     swipeEnabled: false,
   }
 );
