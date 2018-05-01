@@ -48,11 +48,6 @@ class TrickScreen extends Component {
   }
 
   componentDidMount() {
-    db.transaction(tx => {
-      tx.executeSql(
-        'create table if not exists tricks (id integer primary key not null, name text);'
-      );
-    });
     this.update();
   }
 

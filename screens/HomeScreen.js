@@ -9,6 +9,7 @@ import {
   ListView,
 } from 'react-native';
 
+import moment from 'moment'
 import { CheckBox, Container, Header, Content, Button, Body, Left, Right, Title, Icon, List, ListItem, Text } from 'native-base';
 
 import Expo, { SQLite } from 'expo';
@@ -72,7 +73,7 @@ export default class InboxScreen extends React.Component {
   update() {
     db.transaction(tx => {
       tx.executeSql(
-        `SELECT * FROM tricks;`, [],
+        `SELECT * FROM tricks WHERE trigger_date <= ?;`, [moment().format("YYYY-MM-DD")],
         (_, { rows: { _array } }) => {
           this.setState({ items: _array })
         });
@@ -84,13 +85,69 @@ export default class InboxScreen extends React.Component {
     return checkboxState => {
       let set = _self.state.checked
       let checked = new Set(set)
-      if (checkboxState) { 
-        checked.add(id) 
-      } else { 
+      if (checkboxState) {
+        checked.add(id)
+      } else {
         checked.delete(id)
       }
       _self.setState({checked})
     }
+  }
+
+  updateTrick(obj) {
+    return new Promise((resolve, reject) => {
+      db.transaction(
+        tx => {
+          tx.executeSql('UPDATE tricks SET trigger_date=?, trigger_interval=? WHERE id=?', [obj.trigger_date, obj.trigger_interval, obj.id])
+          tx.executeSql('select * from tricks', [], (_, { rows }) =>
+            console.log(JSON.stringify(rows))
+          );
+        },
+        reject,
+        resolve,
+      );
+    })
+  }
+
+  populateSelectedItems() {
+    let checked = this.state.checked
+    return this.state.items.filter(item => checked.has(item.id))
+  }
+
+  skip(paramDays) {
+    const daysToSkip = paramDays || 14
+    this.populateSelectedItems().map(item => {
+      let obj = Object.assign(item, {})
+      obj.trigger_interval = obj.trigger_interval / 2
+      if (obj.trigger_interval < 1) {
+        obj.trigger_interval = 1
+      } 
+      obj.trigger_date = moment().day(daysToSkip).format("YYYY-MM-DD")
+      this.updateTrick(obj).then(() => this.update()).catch(console.log)
+    })
+  }
+
+  hard() {
+    this.populateSelectedItems().map(item => {
+      let obj = Object.assign(item, {})
+      obj.trigger_interval = obj.trigger_interval * 2
+      obj.trigger_date = moment().day(obj.trigger_interval).format("YYYY-MM-DD")
+      this.updateTrick(obj).then(() => this.update()).catch(console.log)
+    })
+  }
+
+  good() {
+    this.populateSelectedItems().map(item => {
+      let obj = Object.assign(item, {})
+      let days = obj.trigger_interval * 4
+      obj.trigger_interval = days
+      obj.trigger_date = moment().day(days).format("YYYY-MM-DD")
+      this.updateTrick(obj).then(() => this.update()).catch(console.log)
+    })
+  }
+
+  activeActions() {
+    return this.state.checked.size > 0
   }
 
   render() {
@@ -103,17 +160,17 @@ export default class InboxScreen extends React.Component {
       <Container>
         <Header>
           <Left>
-            <Button transparent>
+            <Button transparent onPress={() => this.skip()} disabled={!this.activeActions()}>
               <Text>Skip</Text>
             </Button>
           </Left>
           <Body>
-            <Button transparent>
+            <Button transparent onPress={() => this.hard()} disabled={!this.activeActions()}>
               <Text>Hard</Text>
             </Button>
           </Body>
           <Right>
-            <Button transparent>
+            <Button transparent onPress={() => this.good()} disabled={!this.activeActions()}>
               <Text>Good</Text>
             </Button>
           </Right>

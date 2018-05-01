@@ -1,5 +1,6 @@
 import React, { Component } from 'react';
 import { Button, Icon, Container, Header, Content, Form, Item, Input, Label, Text } from 'native-base';
+import moment from 'moment'
 
 import Expo, { SQLite } from 'expo';
 const db = SQLite.openDatabase('db.db');
@@ -34,14 +35,17 @@ export default class TrickDetailComponent extends Component {
   }
 
   save() {
+    // https://stackoverflow.com/questions/4205181/insert-into-a-mysql-table-or-update-if-exists
     return this.isNewTrick() ? this.create() : this.update()
   }
 
   create() {
     const { name } = this.state
+    const trigger_date = moment().format("YYYY-MM-DD")
+    const trigger_interval = 1
     db.transaction(
       tx => {
-        tx.executeSql('insert into tricks (name) values (?)', [name]);
+        tx.executeSql('insert into tricks (name, trigger_date, trigger_interval) values (?, ?, ?)', [name, trigger_date, trigger_interval]);
         tx.executeSql('select * from tricks', [], (_, { rows }) =>
           console.log(JSON.stringify(rows))
         );
