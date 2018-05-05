@@ -22,8 +22,7 @@ import {
 import { StackNavigator } from 'react-navigation'
 import TrickDetail  from '../components/trick-detail-component'
 
-import Expo, { SQLite } from 'expo';
-const db = SQLite.openDatabase('db.db');
+import { Trick } from '../src/db';
 
 class TrickScreen extends Component {
   static navigationOptions = {
@@ -52,13 +51,7 @@ class TrickScreen extends Component {
   }
 
   update() {
-    db.transaction(tx => {
-      tx.executeSql(
-        `SELECT * FROM tricks GROUP BY name;`, [],
-        (_, { rows: { _array } }) => {
-          this.setState({ items: _array })
-        });
-    });
+    Trick.allByName().then(items => this.setState({ items }))
   }
 
   dissmiss(secId, rowId, rowMap) {

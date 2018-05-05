@@ -1,9 +1,41 @@
 import React, { Component } from 'react';
-import { Button, Icon, Container, Header, Content, Form, Item, Input, Label, Text } from 'native-base';
+import { Alert } from 'react-native';
+import { Button, Icon, Container, Header, Content, Form, Item, Input, Label, Text, List, ListItem, CheckBox, Body } from 'native-base';
 import moment from 'moment'
 
-import Expo, { SQLite } from 'expo';
-const db = SQLite.openDatabase('db.db');
+import { Trick } from '../src/db';
+
+class StanceSelector extends Component {
+  render() {
+    return (
+      <List>
+        <ListItem>
+          <CheckBox/>
+          <Body>
+            <Text>Normal</Text>
+          </ Body>
+        </ListItem>
+        <ListItem>
+          <CheckBox/>
+          <Body>
+            <Text>Nolli</Text>
+          </ Body>
+        </ListItem>
+        <ListItem>
+          <CheckBox/>
+          <Body>
+            <Text>Switch</Text>
+          </ Body>
+        </ListItem>
+        <ListItem>
+          <CheckBox/>
+          <Body>
+            <Text>Fakie</Text>
+          </ Body>
+        </ListItem>
+      </List>)
+  }
+}
 
 export default class TrickDetailComponent extends Component {
   static navigationOptions = ({ navigation }) => {
@@ -18,19 +50,24 @@ export default class TrickDetailComponent extends Component {
   state = {
     valid: false,
     name: '',
+    stances: [{id: 1, name: 'normal'}, {id: 2, name: 'fakie'}, 
+              {id: 3, name: 'switch'}, {id: 4, name: 'nollie'}],
+    prefix_tags:  [{id: 1, name: '_'}],
+    postfix_tags: [{id: 1, name: '_'}], 
+    obstacles:    [{id: 1, name: '_'}],
   };
 
   constructor(props) {
     super(props);
     const params = this.props.navigation.state.params || {}
-    name = params.trickName || ''
+    const name = params.trickName || ''
 
     this.state.name = name
   }
 
   isNewTrick () {
     const params = this.props.navigation.state.params || {}
-    name = params.trickName || ''
+    const name = params.trickName || ''
     return name === ''
   }
 
@@ -40,19 +77,24 @@ export default class TrickDetailComponent extends Component {
   }
 
   create() {
-    const { name } = this.state
-    const trigger_date = moment().format("YYYY-MM-DD")
-    const trigger_interval = 1
-    db.transaction(
-      tx => {
-        tx.executeSql('insert into tricks (name, trigger_date, trigger_interval) values (?, ?, ?)', [name, trigger_date, trigger_interval]);
-        tx.executeSql('select * from tricks', [], (_, { rows }) =>
-          console.log(JSON.stringify(rows))
-        );
-      },
-      console.log,
-      () => this.props.navigation.goBack(),
-    );
+    Trick.create(this.state, () => this.props.navigation.goBack())
+  }
+
+  delete() {
+    const params = this.props.navigation.state.params || {}
+    initName = params.trickName 
+    Alert.alert(
+      'Delete Trick',
+      initName,
+      [
+        {text: 'Cancel', onPress: () => console.log('Cancel Pressed'), style: 'cancel'},
+        {text: 'OK', onPress: () => Trick.delete(
+          initName,
+          () => this.props.navigation.goBack(),
+        ) },
+      ],
+      { cancelable: false }
+    )
   }
 
   update() {
@@ -60,19 +102,11 @@ export default class TrickDetailComponent extends Component {
     initName = params.trickName || ''
     const { name } = this.state
 
-    db.transaction(
-      tx => {
-        tx.executeSql('UPDATE tricks SET name = ? WHERE name = ?' [name, initName])
-        tx.executeSql('select * from tricks', [], (_, { rows }) =>
-          console.log(JSON.stringify(rows))
-        );
-      },
-      console.log,
-      () => this.props.navigation.goBack(),
-    );
+    Trick.update(initName, this.state, () => this.props.navigation.goBack())
   }
 
   validate (state) {
+    // TODO: at least one prefix & postfix & stance & obstacle
     var valid = true
     if (!this.isNewTrick()) {
       const params = this.props.navigation.state.params || {}
@@ -80,11 +114,9 @@ export default class TrickDetailComponent extends Component {
       valid = name != state.name
     }
     valid = valid && state.name.length > 0
-    db.transaction(tx => {
-      tx.executeSql('SELECT * FROM tricks WHERE name=? LIMIT 1', [state.name], (_, { rows }) => {
-        valid = valid && rows.length < 1
-        this.setState({valid})
-      })
+    Trick.findByName(initName, (rows) => {
+      valid = valid && rows.length < 1
+      this.setState({valid})
     })
   }
 
@@ -97,6 +129,10 @@ export default class TrickDetailComponent extends Component {
       <Container>
         <Content>
           <Form>
+            <StanceSelector />
+            <Button transparent>
+              <Text>Pre Tags</Text>
+            </Button>
             <Item floatingLabel>
               <Label>Trick Name</Label>
               <Input
@@ -104,11 +140,22 @@ export default class TrickDetailComponent extends Component {
                 onChangeText={name => this.updateState({ name })}
                 />
             </Item>
+            <Button transparent>
+              <Text>Post Tags</Text>
+            </Button>
+            <Button transparent>
+              <Text>Obstacles</Text>
+            </Button>
             <Button full 
               disabled={!this.state.valid}
               onPress={() => this.save()} >
               <Text>Save</Text>
             </Button>
+            {(() => {
+              if (!this.isNewTrick()) {
+                return <Button full danger onPress={() => this.delete()} > <Text>delete</Text> </Button> 
+              }
+            })()}
           </Form>
         </Content>
       </Container>

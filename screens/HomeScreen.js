@@ -12,8 +12,7 @@ import {
 import moment from 'moment'
 import { CheckBox, Container, Header, Content, Button, Body, Left, Right, Title, Icon, List, ListItem, Text } from 'native-base';
 
-import Expo, { SQLite } from 'expo';
-const db = SQLite.openDatabase('db.db');
+import { Trick } from '../src/db';
 
 class CheckboxedItem extends React.Component {
   state = {
@@ -51,6 +50,17 @@ export default class InboxScreen extends React.Component {
     checked: new Set(),
   };
 
+  constructor(props) {
+    super(props);
+
+    this.props.navigation.addListener(
+      'willFocus',
+      payload => {
+        this.update()
+      }
+    );
+  }
+
   componentDidMount() {
     this.update();
   }
@@ -71,13 +81,7 @@ export default class InboxScreen extends React.Component {
   }
 
   update() {
-    db.transaction(tx => {
-      tx.executeSql(
-        `SELECT * FROM tricks WHERE trigger_date <= ?;`, [moment().format("YYYY-MM-DD")],
-        (_, { rows: { _array } }) => {
-          this.setState({ items: _array })
-        });
-    });
+    Trick.allTriggered().then(items => this.setState({ items }))
   }
 
   toggleChecked(id) {
@@ -94,20 +98,6 @@ export default class InboxScreen extends React.Component {
     }
   }
 
-  updateTrick(obj) {
-    return new Promise((resolve, reject) => {
-      db.transaction(
-        tx => {
-          tx.executeSql('UPDATE tricks SET trigger_date=?, trigger_interval=? WHERE id=?', [obj.trigger_date, obj.trigger_interval, obj.id])
-          tx.executeSql('select * from tricks', [], (_, { rows }) =>
-            console.log(JSON.stringify(rows))
-          );
-        },
-        reject,
-        resolve,
-      );
-    })
-  }
 
   populateSelectedItems() {
     let checked = this.state.checked
@@ -121,9 +111,9 @@ export default class InboxScreen extends React.Component {
       obj.trigger_interval = obj.trigger_interval / 2
       if (obj.trigger_interval < 1) {
         obj.trigger_interval = 1
-      } 
+      }
       obj.trigger_date = moment().day(daysToSkip).format("YYYY-MM-DD")
-      this.updateTrick(obj).then(() => this.update()).catch(console.log)
+      Trick.trigger(obj).then(() => this.update()).catch(console.log)
     })
   }
 
@@ -132,7 +122,7 @@ export default class InboxScreen extends React.Component {
       let obj = Object.assign(item, {})
       obj.trigger_interval = obj.trigger_interval * 2
       obj.trigger_date = moment().day(obj.trigger_interval).format("YYYY-MM-DD")
-      this.updateTrick(obj).then(() => this.update()).catch(console.log)
+      Trick.trigger(obj).then(() => this.update()).catch(console.log)
     })
   }
 
@@ -142,7 +132,7 @@ export default class InboxScreen extends React.Component {
       let days = obj.trigger_interval * 4
       obj.trigger_interval = days
       obj.trigger_date = moment().day(days).format("YYYY-MM-DD")
-      this.updateTrick(obj).then(() => this.update()).catch(console.log)
+      Trick.trigger(obj).then(() => this.update()).catch(console.log)
     })
   }
 

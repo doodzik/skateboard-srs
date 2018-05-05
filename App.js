@@ -1,10 +1,10 @@
 import React from 'react';
 import { Platform, StatusBar, StyleSheet, View } from 'react-native';
-import { AppLoading, Asset, Font, SQLite } from 'expo';
+import { AppLoading, Asset, Font } from 'expo';
 import { Ionicons } from '@expo/vector-icons';
 import RootNavigation from './navigation/RootNavigation';
 
-const db = SQLite.openDatabase('db.db');
+import { init } from './src/db';
 
 export default class App extends React.Component {
   state = {
@@ -12,12 +12,7 @@ export default class App extends React.Component {
   };
 
   componentDidMount() {
-    db.transaction(tx => {
-      // tx.executeSql('drop table tricks;')
-      tx.executeSql(
-        'create table if not exists tricks (id integer primary key not null, name text, trigger_date DATE, trigger_interval int);'
-      );
-    });
+    init()
   }
 
   render() {
