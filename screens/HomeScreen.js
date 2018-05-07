@@ -10,33 +10,10 @@ import {
 } from 'react-native';
 
 import moment from 'moment'
-import { CheckBox, Container, Header, Content, Button, Body, Left, Right, Title, Icon, List, ListItem, Text } from 'native-base';
+import { Container, Header, Content, Button, Body, Left, Right, Title, Icon, List, ListItem, Text } from 'native-base';
 
 import { Trick } from '../src/db';
-
-class CheckboxedItem extends React.Component {
-  state = {
-    checked: false
-  }
-
-  toggleChecked() {
-    const checked = !this.state.checked
-    this.props.change(checked)
-    this.setState({checked})
-  }
-
-  render() {
-    return (<ListItem onPress={() => this.toggleChecked()}>
-      <CheckBox
-        onPress={() => this.toggleChecked()}
-        checked={this.state.checked}
-        />
-      <Body>
-        <Text>{this.props.name}</Text>
-      </Body>
-    </ListItem>)
-  }
-}
+import CheckBoxListItem from '../components/checkbox';
 
 export default class InboxScreen extends React.Component {
   static navigationOptions = ({ navigation }) => {
@@ -167,7 +144,7 @@ export default class InboxScreen extends React.Component {
         </Header>
         <Content>
           <List dataArray={items}
-            renderRow={(item) => <CheckboxedItem name={item.name} change={this.toggleChecked(item.id)}/>}
+            renderRow={(item) => <CheckBoxListItem name={item.name} change={this.toggleChecked(item.id)}/>}
             />
         </Content>
       </Container>

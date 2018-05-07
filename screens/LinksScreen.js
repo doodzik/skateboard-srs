@@ -15,12 +15,9 @@ import {
   Button,
 } from 'native-base';
 
-import {
-  View,
-} from 'react-native'
-
 import { StackNavigator } from 'react-navigation'
 import TrickDetail  from '../components/trick-detail-component'
+import Selector  from '../components/selector'
 
 import { Trick } from '../src/db';
 
@@ -99,7 +96,9 @@ class TrickScreen extends Component {
   }
 }
 
+
 export default StackNavigator({
   LinksScreen: { screen: TrickScreen },
   TrickDetail: { screen: TrickDetail },
+  Selector: { screen: Selector },
 });

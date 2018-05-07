@@ -5,36 +5,9 @@ import moment from 'moment'
 
 import { Trick } from '../src/db';
 
-class StanceSelector extends Component {
-  render() {
-    return (
-      <List>
-        <ListItem>
-          <CheckBox/>
-          <Body>
-            <Text>Normal</Text>
-          </ Body>
-        </ListItem>
-        <ListItem>
-          <CheckBox/>
-          <Body>
-            <Text>Nolli</Text>
-          </ Body>
-        </ListItem>
-        <ListItem>
-          <CheckBox/>
-          <Body>
-            <Text>Switch</Text>
-          </ Body>
-        </ListItem>
-        <ListItem>
-          <CheckBox/>
-          <Body>
-            <Text>Fakie</Text>
-          </ Body>
-        </ListItem>
-      </List>)
-  }
+
+class Segment extends Component {
+
 }
 
 export default class TrickDetailComponent extends Component {
@@ -50,11 +23,10 @@ export default class TrickDetailComponent extends Component {
   state = {
     valid: false,
     name: '',
-    stances: [{id: 1, name: 'normal'}, {id: 2, name: 'fakie'}, 
-              {id: 3, name: 'switch'}, {id: 4, name: 'nollie'}],
-    prefix_tags:  [{id: 1, name: '_'}],
-    postfix_tags: [{id: 1, name: '_'}], 
-    obstacles:    [{id: 1, name: '_'}],
+    stances: new Set([1, 2, 3, 4]),
+    preTags: new Set([1]),
+    postTags: new Set([1]), 
+    obstacles: new Set([1]),
   };
 
   constructor(props) {
@@ -63,6 +35,16 @@ export default class TrickDetailComponent extends Component {
     const name = params.trickName || ''
 
     this.state.name = name
+
+    this.props.navigation.addListener(
+      'willFocus',
+      payload => {
+        if (payload.action.type == "Navigation/BACK") {
+          console.log(this.props.navigation.state.params)
+          console.log(this.props.navigation.state.params)
+        }
+      }
+    );
   }
 
   isNewTrick () {
@@ -82,7 +64,7 @@ export default class TrickDetailComponent extends Component {
 
   delete() {
     const params = this.props.navigation.state.params || {}
-    initName = params.trickName 
+    const initName = params.trickName 
     Alert.alert(
       'Delete Trick',
       initName,
@@ -99,7 +81,7 @@ export default class TrickDetailComponent extends Component {
 
   update() {
     const params = this.props.navigation.state.params || {}
-    initName = params.trickName || ''
+    const initName = params.trickName || ''
     const { name } = this.state
 
     Trick.update(initName, this.state, () => this.props.navigation.goBack())
@@ -114,7 +96,8 @@ export default class TrickDetailComponent extends Component {
       valid = name != state.name
     }
     valid = valid && state.name.length > 0
-    Trick.findByName(initName, (rows) => {
+
+    Trick.findByName(state.name, (rows) => {
       valid = valid && rows.length < 1
       this.setState({valid})
     })
@@ -124,15 +107,85 @@ export default class TrickDetailComponent extends Component {
     this.setState(obj, () => this.validate(this.state))
   }
 
+  stances(ids) {
+    const stances = [{id: 1, name: 'normal'}, {id: 2, name: 'fakie'}, {id: 3, name: 'switch'}, {id: 4, name: 'nollie'}]
+    if (typeof ids === 'undefined') {
+      return stances
+    } else {
+      return stances.filter(stance => ids.has(stance.id))
+    }
+  }
+
+  preTags(ids) {
+    const preTags = [{id: 1, name: 'normal'}, {id: 2, name: 'fakie'}, {id: 3, name: 'switch'}, {id: 4, name: 'nollie'}]
+    if (typeof ids === 'undefined') {
+      return preTags
+    } else {
+      return preTags.filter(preTag => ids.has(preTag.id))
+    }
+  }
+
+  postTags(ids) {
+    const postTags = [{id: 1, name: 'normal'}, {id: 2, name: 'fakie'}, {id: 3, name: 'switch'}, {id: 4, name: 'nollie'}]
+    if (typeof ids === 'undefined') {
+      return postTags
+    } else {
+      return postTags.filter(postTag => ids.has(postTag.id))
+    }
+  }
+
+  obstacles(ids) {
+    const obstacles = [{id: 1, name: 'normal'}, {id: 2, name: 'fakie'}, {id: 3, name: 'switch'}, {id: 4, name: 'nollie'}]
+    if (typeof ids === 'undefined') {
+      return obstacles
+    } else {
+      return obstacles.filter(obstacle => ids.has(obstacle.id))
+    }
+  }
+
   render() {
+    const stancesSelector = {
+      items: this.stances(),
+      selected: this.state.stances,
+      onDone: (stances) => this.setState({stances}),
+      title: 'Stances',
+    }
+
+    const preTagsSelector = {
+      items: this.preTags(),
+      selected: this.state.preTags,
+      onDone: (preTags) => this.setState({preTags}),
+      title: 'Pre Tags',
+    }
+
+    const postTagsSelector = {
+      items: this.postTags(),
+      selected: this.state.postTags,
+      onDone: (postTags) => this.setState({postTags}),
+      title: 'Post Tags',
+    }
+
+    const obstaclesSelector = {
+      items: this.obstacles(),
+      selected: this.state.obstacles,
+      onDone: (obstacles) => this.setState({obstacles}),
+      title: 'Obstacles',
+    }
+
     return (
       <Container>
         <Content>
           <Form>
-            <StanceSelector />
-            <Button transparent>
+            <Button transparent 
+              onPress={() => this.props.navigation.navigate('Selector', stancesSelector )}>
+              <Text>Stance</Text>
+            </Button>
+            <Text>{this.stances(this.state.stances).map(stance => stance.name).join(', ')}</Text>
+            <Button transparent 
+              onPress={() => this.props.navigation.navigate('Selector', preTagsSelector )}>
               <Text>Pre Tags</Text>
             </Button>
+            <Text>{this.preTags(this.state.preTags).map(x => x.name).join(', ')}</Text>
             <Item floatingLabel>
               <Label>Trick Name</Label>
               <Input
@@ -140,12 +193,16 @@ export default class TrickDetailComponent extends Component {
                 onChangeText={name => this.updateState({ name })}
                 />
             </Item>
-            <Button transparent>
+            <Button transparent 
+              onPress={() => this.props.navigation.navigate('Selector', postTagsSelector )}>
               <Text>Post Tags</Text>
             </Button>
-            <Button transparent>
+            <Text>{this.postTags(this.state.postTags).map(x => x.name).join(', ')}</Text>
+            <Button transparent 
+              onPress={() => this.props.navigation.navigate('Selector', obstaclesSelector )}>
               <Text>Obstacles</Text>
             </Button>
+            <Text>{this.obstacles(this.state.obstacles).map(x => x.name).join(', ')}</Text>
             <Button full 
               disabled={!this.state.valid}
               onPress={() => this.save()} >
