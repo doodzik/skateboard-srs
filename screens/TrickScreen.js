@@ -13,6 +13,7 @@ import {
   Icon,
   Title,
   Button,
+  ActionSheet,
 } from 'native-base';
 
 import { StackNavigator } from 'react-navigation'

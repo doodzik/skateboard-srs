@@ -10,7 +10,7 @@ import {
 } from 'react-native';
 
 import moment from 'moment'
-import { Container, Header, Content, Button, Body, Left, Right, Title, Icon, List, ListItem, Text } from 'native-base';
+import { ActionSheet, Container, Header, Content, Button, Body, Left, Right, Title, Icon, List, ListItem, Text } from 'native-base';
 
 import { Trick } from '../src/db';
 import CheckBoxListItem from '../components/checkbox';
@@ -81,6 +81,35 @@ export default class InboxScreen extends React.Component {
     return this.state.items.filter(item => checked.has(item.id))
   }
 
+  activeSheet() {
+    var BUTTONS = []
+    if (Platform.OS === 'ios') {
+      var BUTTONS = ["1 Week", "2 Weeks", "1 Month", "Cancel"];
+    } else {
+      var BUTTONS = [
+        { text: "1 Week", icon: "american-football", },
+        { text: "2 Weeks", icon: "analytics" },
+        { text: "1 Month", icon: "aperture", },
+        { text: "Cancel", icon: "close", }
+      ];
+    }
+    var CANCEL_INDEX = 3;
+    ActionSheet.show({
+      options: BUTTONS,
+      cancelButtonIndex: CANCEL_INDEX,
+      title: "Postpone Trick"
+    },
+      buttonIndex => {
+        if (buttonIndex === 3) {
+          return
+        }
+        var days = 7
+        days = (buttonIndex === 1) ? 14 : days
+        days = (buttonIndex === 2) ? 30 : days
+        this.skip(days)
+      })
+  }
+
   skip(paramDays) {
     const daysToSkip = paramDays || 14
     this.populateSelectedItems().map(item => {
@@ -127,7 +156,7 @@ export default class InboxScreen extends React.Component {
       <Container>
         <Header>
           <Left>
-            <Button transparent onPress={() => this.skip()} disabled={!this.activeActions()}>
+            <Button transparent onPress={() => this.activeSheet()} disabled={!this.activeActions()}>
               <Text>Skip</Text>
             </Button>
           </Left>

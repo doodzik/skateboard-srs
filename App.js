@@ -3,6 +3,7 @@ import { Platform, StatusBar, StyleSheet, View } from 'react-native';
 import { AppLoading, Asset, Font } from 'expo';
 import { Ionicons } from '@expo/vector-icons';
 import RootNavigation from './navigation/RootNavigation';
+import { Root } from "native-base";
 
 import { init } from './src/db';
 
@@ -26,10 +27,10 @@ export default class App extends React.Component {
       );
     } else {
       return (
-        <View style={styles.container}>
+        <Root>
           {Platform.OS === 'ios' && <StatusBar barStyle="default" />}
           <RootNavigation />
-        </View>
+        </Root>
       );
     }
   }
