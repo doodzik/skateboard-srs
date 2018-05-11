@@ -3,12 +3,7 @@ import { Alert } from 'react-native';
 import { Button, Icon, Container, Header, Content, Form, Item, Input, Label, Text, List, ListItem, CheckBox, Body } from 'native-base';
 import moment from 'moment'
 
-import { Trick } from '../src/db';
-
-
-class Segment extends Component {
-
-}
+import { Trick, Tag, Obstacle, Stance } from '../src/db';
 
 export default class TrickDetailComponent extends Component {
   static navigationOptions = ({ navigation }) => {
@@ -27,6 +22,9 @@ export default class TrickDetailComponent extends Component {
     preTags: new Set([1]),
     postTags: new Set([1]), 
     obstacles: new Set([1]),
+    depTags: [],
+    depObst: [],
+    depStance: [],
   };
 
   constructor(props) {
@@ -40,11 +38,18 @@ export default class TrickDetailComponent extends Component {
       'willFocus',
       payload => {
         if (payload.action.type == "Navigation/BACK") {
-          console.log(this.props.navigation.state.params)
-          console.log(this.props.navigation.state.params)
+          this.updateDependencyData()
         }
       }
     );
+    this.updateDependencyData()
+  }
+
+  updateDependencyData() {
+    Promise.all([Tag.all(), Obstacle.all(), Stance.all()]).then(vals => {
+      const [depTags, depObst, depStance] = vals
+      this.setState({depTags, depObst, depStance})
+    })
   }
 
   isNewTrick () {
@@ -108,7 +113,7 @@ export default class TrickDetailComponent extends Component {
   }
 
   stances(ids) {
-    const stances = [{id: 1, name: 'normal'}, {id: 2, name: 'fakie'}, {id: 3, name: 'switch'}, {id: 4, name: 'nollie'}]
+    const stances = this.state.depStance
     if (typeof ids === 'undefined') {
       return stances
     } else {
@@ -117,7 +122,7 @@ export default class TrickDetailComponent extends Component {
   }
 
   preTags(ids) {
-    const preTags = [{id: 1, name: 'normal'}, {id: 2, name: 'fakie'}, {id: 3, name: 'switch'}, {id: 4, name: 'nollie'}]
+    const preTags = this.state.depTags
     if (typeof ids === 'undefined') {
       return preTags
     } else {
@@ -126,7 +131,7 @@ export default class TrickDetailComponent extends Component {
   }
 
   postTags(ids) {
-    const postTags = [{id: 1, name: 'normal'}, {id: 2, name: 'fakie'}, {id: 3, name: 'switch'}, {id: 4, name: 'nollie'}]
+    const postTags = this.state.depTags
     if (typeof ids === 'undefined') {
       return postTags
     } else {
@@ -135,7 +140,7 @@ export default class TrickDetailComponent extends Component {
   }
 
   obstacles(ids) {
-    const obstacles = [{id: 1, name: 'normal'}, {id: 2, name: 'fakie'}, {id: 3, name: 'switch'}, {id: 4, name: 'nollie'}]
+    const obstacles = this.state.depObst
     if (typeof ids === 'undefined') {
       return obstacles
     } else {
@@ -213,6 +218,9 @@ export default class TrickDetailComponent extends Component {
                 return <Button full danger onPress={() => this.delete()} > <Text>delete</Text> </Button> 
               }
             })()}
+            <Item floatingLabel>
+              <Label>Generated Tricks</Label>
+            </Item >
           </Form>
         </Content>
       </Container>

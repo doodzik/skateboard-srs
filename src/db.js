@@ -1,32 +1,15 @@
 import { SQLite } from 'expo';
 const db = SQLite.openDatabase('db.db');
 import moment from 'moment'
-
-export function drop () {
-  db.transaction(tx => {
-    tx.executeSql('drop table tricks;')
-    tx.executeSql('drop table Stances;')
-    tx.executeSql('drop table Tags;')
-    tx.executeSql('drop table Obstacles;')
-  })
-}
-
-export function init () {
-    db.transaction(tx => {
-      // TODO: stance values if don't exist
-      //       relationship
-      //
-      // TODO: rename tricks -> Tricks
-      tx.executeSql('create table if not exists tricks (id integer primary key not null, name text, trigger_date DATE, trigger_interval int);');
-      tx.executeSql('create table if not exists Stances (id integer primary key not null, name text);')
-      tx.executeSql('create table if not exists Tags (id integer primary key not null, name text);')
-      tx.executeSql('create table if not exists Obstacles (id integer primary key not null, name text);')
-    });
-}
-
+import { plural, singular } from 'pluralize';
+import _ from 'lodash'
 // TODO
 // return new Promise((resolve, reject) => {
 export const Trick = {
+  init(tx) {
+      tx.executeSql('create table if not exists tricks (id integer primary key not null, name text, trigger_date DATE, trigger_interval int);');
+  },
+
   create(data, cb) {
     const tricks = this.generateTricksDBValues(data)
     const trigger_date     = moment().format("YYYY-MM-DD")
@@ -147,4 +130,104 @@ export const Trick = {
     })
     return arr
   }
+}
+
+export const Tag = nameBasedTable('tags') 
+export const Obstacle = nameBasedTable('obstacles') 
+
+// TODO refactor to use pname and name internally
+function nameBasedTable(tableName) {
+  const singularName = singular(_.capitalize(tableName))
+  const pluralName   = plural(_.capitalize(tableName))
+
+  return {
+    init(tx) {
+      tx.executeSql(`CREATE TABLE IF NOT EXISTS ${tableName} (id INTEGER PRIMARY KEY NOT NULL, name TEXT UNIQUE);`)
+      tx.executeSql(`INSERT OR IGNORE INTO ${tableName} (name) VALUES (?)`, ['<empty>']);
+    },
+
+    name: singularName,
+    pname: pluralName,
+
+    create(name) {
+      return new Promise((resolve, reject) => {
+        db.transaction(tx => {
+          tx.executeSql(`insert into ${tableName} (name) values (?)`, [name]);
+        }, reject, resolve,);
+      })
+    },
+
+    update(name, newName) {
+      return this.findByName(name)
+        .then(data => data._array[0].id)
+        .then(id => {
+        return new Promise((resolve, reject) => {
+          db.transaction(tx => {
+            // TODO verify that this works
+            // TODO verify that it works with where name instead of id
+            tx.executeSql(`UPDATE ${tableName} SET name = ? WHERE id = ?;`, [newName, id])
+          }, reject, resolve,)
+        })
+      })
+    },
+
+    delete(name) {
+      return new Promise((resolve, reject) => {
+        db.transaction(tx => {
+          tx.executeSql(`DELETE FROM ${tableName} WHERE name=?`, [name])
+        }, reject, resolve,)
+      })
+    },
+
+    findByName(name) {
+      return new Promise((resolve, reject) => {
+        db.transaction(tx => {
+          tx.executeSql(`SELECT * FROM ${tableName} WHERE name=? LIMIT 1`, [name], (_, { rows }) => {
+            resolve(rows)
+          })
+        })
+      })
+    },
+
+    all() {
+      return new Promise((resolve, reject) => {  
+        db.transaction(tx => {
+          tx.executeSql(`SELECT * FROM ${tableName};`, [], (_, { rows: { _array } }) => resolve(_array))
+        })
+      })
+    },
+  }
+}
+
+export const Stance = {
+  init(tx) {
+      tx.executeSql('create table if not exists stances (id integer primary key not null, name text UNIQUE);')
+      tx.executeSql(`INSERT OR IGNORE INTO stances (name) values (?), (?), (?), (?)`, ['Normal', 'Nolli', 'Switch', 'Fakie']);
+  },
+
+  all() {
+    return new Promise((resolve, reject) => {  
+      db.transaction(tx => {
+        tx.executeSql(`SELECT * FROM stances;`, [], (_, { rows: { _array } }) => resolve(_array))
+      })
+    })
+  },
+}
+
+export function drop () {
+  db.transaction(tx => {
+    tx.executeSql('drop table tricks;')
+    tx.executeSql('drop table stances;')
+    tx.executeSql('drop table tags;')
+    tx.executeSql('drop table obstacles;')
+  })
+}
+
+export function init () {
+  db.transaction(tx => {
+    Trick.init(tx)
+    Tag.init(tx)
+    Stance.init(tx)
+    Obstacle.init(tx)
+  })
 }
