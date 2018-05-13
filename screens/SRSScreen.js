@@ -7,6 +7,7 @@ import {
   TouchableOpacity,
   View,
   ListView,
+  Dimensions,
 } from 'react-native';
 
 import moment from 'moment'
@@ -40,21 +41,6 @@ export default class InboxScreen extends React.Component {
 
   componentDidMount() {
     this.update();
-  }
-
-  check(secId, rowId, rowMap) {
-    deleteRow(secId, rowId, rowMap)
-  }
-
-  dissmiss(secId, rowId, rowMap) {
-    deleteRow(secId, rowId, rowMap)
-  }
-
-  deleteRow(secId, rowId, rowMap) {
-    rowMap[`${secId}${rowId}`].props.closeRow();
-    const newData = [...this.state.listViewData];
-    newData.splice(rowId, 1);
-    this.setState({ listViewData: newData });
   }
 
   update() {
@@ -119,7 +105,9 @@ export default class InboxScreen extends React.Component {
         obj.trigger_interval = 1
       }
       obj.trigger_date = moment().day(daysToSkip).format("YYYY-MM-DD")
-      Trick.trigger(obj).then(() => this.update()).catch(console.log)
+      Trick.trigger(obj)
+        .then(() => this.setState({checked: new Set()}))
+        .then(() => this.update()).catch(console.log)
     })
   }
 
@@ -148,9 +136,8 @@ export default class InboxScreen extends React.Component {
 
   render() {
     const { items } = this.state;
-    if (items === null || items.length === 0) {
-      return null
-    }
+    let {height} = Dimensions.get('window');
+    height = height * 0.8 
 
     return (
       <Container>
@@ -172,9 +159,17 @@ export default class InboxScreen extends React.Component {
           </Right>
         </Header>
         <Content>
-          <List dataArray={items}
-            renderRow={(item) => <CheckBoxListItem name={item.name} change={this.toggleChecked(item.id)}/>}
-            />
+          {(() => {
+            if (items === null || items.length === 0) {
+              return (<View style={{ flex: 1, height, justifyContent: 'center', alignItems: 'center' }}>
+                <Text>All Done!</Text>
+              </View>)
+            } else {
+              return (<List dataArray={items}
+                renderRow={(item) => <CheckBoxListItem name={item.name} change={this.toggleChecked(item.id)}/>}
+                />)
+            }
+          })()}
         </Content>
       </Container>
     );

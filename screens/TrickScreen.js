@@ -19,6 +19,7 @@ import {
 import { StackNavigator } from 'react-navigation'
 import TrickDetail from '../components/trick-detail-component'
 import Selector from '../components/selector'
+import { View, Dimensions } from 'react-native';
 
 import { Trick } from '../src/db';
 
@@ -65,9 +66,8 @@ class TrickScreen extends Component {
 
   render() {
     const { items } = this.state;
-    if (items === null || items.length === 0) {
-      return null
-    }
+    let {height} = Dimensions.get('window');
+    height = height * 0.8 
 
     return (
       <Container>
@@ -83,14 +83,25 @@ class TrickScreen extends Component {
           </Right>
         </Header>
         <Content>
-          <List dataArray={items}
-            renderRow={(data) =>
-              <ListItem onPress={() => this.props.navigation.navigate('TrickDetail', { trickName: data.name } )}>
-                <Text>{data.name}</Text>
-              </ListItem>
+          {(() => {
+            if (items === null || items.length === 0) {
+              return (
+                <View style={{ flex: 1, height, justifyContent: 'center', alignItems: 'center' }}>
+                  <Text>No Trics yet</Text>
+                </View>
+              )
+            } else {
+              return (
+                <List dataArray={items}
+                  renderRow={(data) =>
+                    <ListItem onPress={() => this.props.navigation.navigate('TrickDetail', { trickName: data.name } )}>
+                      <Text>{data.name}</Text>
+                    </ListItem>
+                  } >
+                  </List>
+                )
             }
-            >
-          </List>
+          })()}
         </Content>
       </Container>
     );

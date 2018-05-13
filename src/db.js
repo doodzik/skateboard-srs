@@ -7,7 +7,7 @@ import _ from 'lodash'
 // return new Promise((resolve, reject) => {
 export const Trick = {
   init(tx) {
-      tx.executeSql('create table if not exists tricks (id integer primary key not null, name text, trigger_date DATE, trigger_interval int);');
+      tx.executeSql('create table if not exists tricks (id integer primary key not null, name text, trigger_date DATE, trigger_interval int, stance_id int, prefix_tag_id int, postfix_tag int, obstacle_id int);');
   },
 
   create(data, cb) {
@@ -61,9 +61,23 @@ export const Trick = {
   },
 
   findByName(name, cb) {
-    db.transaction(tx => {
-      tx.executeSql('SELECT * FROM tricks WHERE name=? LIMIT 1', [name], (_, { rows }) => {
-        cb(rows)
+    return new Promise((resolve, reject) => {
+      db.transaction(tx => {
+        tx.executeSql('SELECT * FROM tricks WHERE name=?', [name], (_, { rows }) => {
+          resolve(rows)
+        })
+      }, reject)
+    })
+  },
+
+  allFuture() {
+    return new Promise((resolve, reject) => {  
+      db.transaction(tx => {
+        tx.executeSql(
+          `SELECT * FROM tricks WHERE trigger_date > ?;`, [moment().format("YYYY-MM-DD")],
+          (_, { rows: { _array } }) => {
+            resolve(_array)
+          })
       })
     })
   },
@@ -138,6 +152,7 @@ export const Obstacle = nameBasedTable('obstacles')
 // TODO refactor to use pname and name internally
 function nameBasedTable(tableName) {
   const singularName = singular(_.capitalize(tableName))
+  const singularLowerName = singular(_.lowerCase(tableName))
   const pluralName   = plural(_.capitalize(tableName))
 
   return {
@@ -172,11 +187,16 @@ function nameBasedTable(tableName) {
     },
 
     delete(name) {
-      return new Promise((resolve, reject) => {
-        db.transaction(tx => {
-          tx.executeSql(`DELETE FROM ${tableName} WHERE name=?`, [name])
-        }, reject, resolve,)
-      })
+      return this.findByName(name)
+        .then(data => data._array[0].id)
+        .then(id => {
+          return new Promise((resolve, reject) => {
+            db.transaction(tx => {
+              tx.executeSql(`DELETE FROM ${tableName} WHERE name=?`, [name])
+              tx.executeSql(`DELETE FROM tricks WHERE ${singularLowerName}_id=?`, [id])
+            }, reject, resolve,)
+          })
+        })
     },
 
     findByName(name) {

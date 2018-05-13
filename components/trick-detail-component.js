@@ -46,6 +46,12 @@ export default class TrickDetailComponent extends Component {
   }
 
   updateDependencyData() {
+    const myFirstPromise = new Promise((resolve, reject) => {
+      if (!this.isNewTrick()) {
+          
+      }
+      // postTags: new Set([1]), 
+    })
     Promise.all([Tag.all(), Obstacle.all(), Stance.all()]).then(vals => {
       const [depTags, depObst, depStance] = vals
       this.setState({depTags, depObst, depStance})
@@ -102,7 +108,7 @@ export default class TrickDetailComponent extends Component {
     }
     valid = valid && state.name.length > 0
 
-    Trick.findByName(state.name, (rows) => {
+    Trick.findByName(state.name).then((rows) => {
       valid = valid && rows.length < 1
       this.setState({valid})
     })
