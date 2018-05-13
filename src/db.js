@@ -7,22 +7,21 @@ import _ from 'lodash'
 // return new Promise((resolve, reject) => {
 export const Trick = {
   init(tx) {
-      tx.executeSql('create table if not exists tricks (id integer primary key not null, name text, trigger_date DATE, trigger_interval int, stance_id int, prefix_tag_id int, postfix_tag int, obstacle_id int);');
+      tx.executeSql('create table if not exists tricks (id integer primary key not null, name text, trigger_date DATE, trigger_interval int, stance_id int, prefix_tag_id int, postfix_tag_id int, obstacle_id int);');
   },
 
-  create(data, cb) {
+  create(data) {
     const tricks = this.generateTricksDBValues(data)
     const trigger_date     = moment().format("YYYY-MM-DD")
     const trigger_interval = 1
-    const values           = tricks.map(t => t.push(trigger_date).push(trigger_interval))
+    const values           = tricks.map(t => t.concat(trigger_date).concat(trigger_interval))
     const inserts          = tricks.map(_ => '(?,?,?,?,?,?,?)').join(',')
-    db.transaction(
-      tx => {
-        tx.executeSql(`insert into tricks (stance_id, prefix_tag_id, name, postfix_tag_id, obstacle_id, trigger_date, trigger_interval) values ${inserts}`, values);
-      },
-      console.log,
-      cb,
-    );
+    
+    return new Promise((resolve, reject) => {
+      db.transaction(tx => {
+        tx.executeSql(`insert into tricks (stance_id, prefix_tag_id, name, postfix_tag_id, obstacle_id, trigger_date, trigger_interval) values ${inserts}`, _.flatten(values));
+      }, reject, resolve,);
+    })
   },
 
   update(name, data, cb) {
@@ -30,7 +29,7 @@ export const Trick = {
       tx => {
         tx.executeSql('UPDATE tricks SET name = ? WHERE name = ?' [data.name, name])
         tx.executeSql('select name, stances, prefix_tags, postfix_tags, obstacles from tricks where name=?', [name], (_, { rows }) => {
-          let newer = this.generateTricksDBValues(this.state)
+          let newer = this.generateTricksDBValues(data)
           let {deleted, created} = this.diffTrick(earlier, newer)
           this.createFn(created, () => {
             deleted
@@ -54,10 +53,12 @@ export const Trick = {
     })
   },
 
-  delete(name, cb) {
-    db.transaction(tx => {
-        tx.executeSql('DELETE FROM tricks WHERE name=?', [name])
-      }, console.log, cb);
+  delete(name) {
+    return new Promise((resolve, reject) => {
+      db.transaction(tx => {
+          tx.executeSql('DELETE FROM tricks WHERE name=?', [name])
+      }, reject, resolve);
+    })
   },
 
   findByName(name, cb) {
@@ -118,7 +119,7 @@ export const Trick = {
 
   generateTricksName({ name, stances, prefix_tags, postfix_tags, obstacles }) {
     let arr = []
-    getName = obj => obj.name == '_' ? '' : obj.name
+    getName = obj => obj.name == '<empty>' ? '' : obj.name
     stances.forEach(stance => {
       prefix_tags.forEach(prefix_tag => {
         postfix_tags.forEach(postfix_tag => {
@@ -222,7 +223,7 @@ function nameBasedTable(tableName) {
 export const Stance = {
   init(tx) {
       tx.executeSql('create table if not exists stances (id integer primary key not null, name text UNIQUE);')
-      tx.executeSql(`INSERT OR IGNORE INTO stances (name) values (?), (?), (?), (?)`, ['Normal', 'Nolli', 'Switch', 'Fakie']);
+      tx.executeSql(`INSERT OR IGNORE INTO stances (name) values (?), (?), (?), (?)`, ['<empty>', 'Nolli', 'Switch', 'Fakie']);
   },
 
   all() {

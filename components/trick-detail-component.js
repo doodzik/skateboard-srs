@@ -1,6 +1,6 @@
 import React, { Component } from 'react';
 import { Alert } from 'react-native';
-import { Button, Icon, Container, Header, Content, Form, Item, Input, Label, Text, List, ListItem, CheckBox, Body } from 'native-base';
+import { Separator, Button, Icon, Container, Header, Content, Form, Item, Input, Label, Text, List, ListItem, CheckBox, Body } from 'native-base';
 import moment from 'moment'
 
 import { Trick, Tag, Obstacle, Stance } from '../src/db';
@@ -65,12 +65,19 @@ export default class TrickDetailComponent extends Component {
   }
 
   save() {
+    const prefix_tags = this.state.depTags.filter(t => this.state.preTags.has(t.id))
+    const postfix_tags = this.state.depTags.filter(t => this.state.postTags.has(t.id))
+    const obstacles = this.state.depObst.filter(t => this.state.obstacles.has(t.id))
+    const stances = this.state.depStance.filter(t => this.state.stances.has(t.id))
+    const name = this.state.name
+
+    const data = { prefix_tags, postfix_tags, obstacles, stances, name }
     // https://stackoverflow.com/questions/4205181/insert-into-a-mysql-table-or-update-if-exists
-    return this.isNewTrick() ? this.create() : this.update()
+    return this.isNewTrick() ? this.create(data) : this.update(data)
   }
 
-  create() {
-    Trick.create(this.state, () => this.props.navigation.goBack())
+  create(data) {
+    Trick.create(data).then(() => this.props.navigation.goBack())
   }
 
   delete() {
@@ -81,21 +88,17 @@ export default class TrickDetailComponent extends Component {
       initName,
       [
         {text: 'Cancel', onPress: () => console.log('Cancel Pressed'), style: 'cancel'},
-        {text: 'OK', onPress: () => Trick.delete(
-          initName,
-          () => this.props.navigation.goBack(),
-        ) },
+        {text: 'OK', onPress: () => Trick.delete(initName).then(() => this.props.navigation.goBack()) },
       ],
       { cancelable: false }
     )
   }
 
-  update() {
+  update(data) {
     const params = this.props.navigation.state.params || {}
     const initName = params.trickName || ''
-    const { name } = this.state
 
-    Trick.update(initName, this.state, () => this.props.navigation.goBack())
+    Trick.update(initName, data, () => this.props.navigation.goBack())
   }
 
   validate (state) {
@@ -154,6 +157,16 @@ export default class TrickDetailComponent extends Component {
     }
   }
 
+  generateTrickNames() {
+    const prefix_tags = this.state.depTags.filter(t => this.state.preTags.has(t.id))
+    const postfix_tags = this.state.depTags.filter(t => this.state.postTags.has(t.id))
+    const obstacles = this.state.depObst.filter(t => this.state.obstacles.has(t.id))
+    const stances = this.state.depStance.filter(t => this.state.stances.has(t.id))
+    const name = this.state.name
+
+    return Trick.generateTricksName({ name, stances, prefix_tags, postfix_tags, obstacles }).map(e => e.join(' ').trim().replace(/\s{2,}/g, ' '))
+  }
+
   render() {
     const stancesSelector = {
       items: this.stances(),
@@ -183,20 +196,18 @@ export default class TrickDetailComponent extends Component {
       title: 'Obstacles',
     }
 
+    var generatedTricks;
+    generatedTricks = [<ListItem><Text>Generated Tricks</Text></ListItem>]
+    if (this.state.name.length === 0) {
+      generatedTricks = [<ListItem key={0}><Text>Enter a trick name to see all generated tricks</Text></ListItem>]
+    } else {
+      generatedTricks = this.generateTrickNames().map((name, i) => <ListItem key={i}><Text>{name}</Text></ListItem>)
+    }
+
     return (
       <Container>
         <Content>
           <Form>
-            <Button transparent 
-              onPress={() => this.props.navigation.navigate('Selector', stancesSelector )}>
-              <Text>Stance</Text>
-            </Button>
-            <Text>{this.stances(this.state.stances).map(stance => stance.name).join(', ')}</Text>
-            <Button transparent 
-              onPress={() => this.props.navigation.navigate('Selector', preTagsSelector )}>
-              <Text>Pre Tags</Text>
-            </Button>
-            <Text>{this.preTags(this.state.preTags).map(x => x.name).join(', ')}</Text>
             <Item floatingLabel>
               <Label>Trick Name</Label>
               <Input
@@ -204,16 +215,28 @@ export default class TrickDetailComponent extends Component {
                 onChangeText={name => this.updateState({ name })}
                 />
             </Item>
-            <Button transparent 
-              onPress={() => this.props.navigation.navigate('Selector', postTagsSelector )}>
-              <Text>Post Tags</Text>
-            </Button>
-            <Text>{this.postTags(this.state.postTags).map(x => x.name).join(', ')}</Text>
-            <Button transparent 
-              onPress={() => this.props.navigation.navigate('Selector', obstaclesSelector )}>
-              <Text>Obstacles</Text>
-            </Button>
-            <Text>{this.obstacles(this.state.obstacles).map(x => x.name).join(', ')}</Text>
+          </Form>
+          <List>
+            <Separator><Text>Stance</Text></Separator>
+            <ListItem onPress={() => this.props.navigation.navigate('Selector', stancesSelector )} >
+              <Text>{this.stances(this.state.stances).map(stance => stance.name).join(', ')}</Text>
+            </ListItem>
+
+            <Separator><Text>Pre Tags</Text></Separator>
+            <ListItem onPress={() => this.props.navigation.navigate('Selector', preTagsSelector )}>
+              <Text>{this.preTags(this.state.preTags).map(x => x.name).join(', ')}</Text>
+            </ListItem>
+
+            <Separator><Text>Post Tags</Text></Separator>
+            <ListItem onPress={() => this.props.navigation.navigate('Selector', postTagsSelector )}>
+              <Text>{this.postTags(this.state.postTags).map(x => x.name).join(', ')}</Text>
+            </ListItem>
+
+            <Separator><Text>Obstacles</Text></Separator>
+            <ListItem onPress={() => this.props.navigation.navigate('Selector', obstaclesSelector )}>
+              <Text>{this.obstacles(this.state.obstacles).map(x => x.name).join(', ')}</Text>
+            </ListItem>
+
             <Button full 
               disabled={!this.state.valid}
               onPress={() => this.save()} >
@@ -224,10 +247,9 @@ export default class TrickDetailComponent extends Component {
                 return <Button full danger onPress={() => this.delete()} > <Text>delete</Text> </Button> 
               }
             })()}
-            <Item floatingLabel>
-              <Label>Generated Tricks</Label>
-            </Item >
-          </Form>
+              <Separator><Text>Generated Tricks</Text></Separator>
+              {generatedTricks}
+            </List>
         </Content>
       </Container>
     );
