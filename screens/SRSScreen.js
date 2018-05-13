@@ -44,7 +44,7 @@ export default class InboxScreen extends React.Component {
   }
 
   update() {
-    Trick.allTriggered().then(items => this.setState({ items }))
+    return Trick.allTriggered().then(items => this.setState({ items }))
   }
 
   toggleChecked(id) {
@@ -98,36 +98,43 @@ export default class InboxScreen extends React.Component {
 
   skip(paramDays) {
     const daysToSkip = paramDays || 14
-    this.populateSelectedItems().map(item => {
+    const promises = this.populateSelectedItems().map(item => {
       let obj = Object.assign(item, {})
       obj.trigger_interval = obj.trigger_interval / 2
       if (obj.trigger_interval < 1) {
         obj.trigger_interval = 1
       }
       obj.trigger_date = moment().day(daysToSkip).format("YYYY-MM-DD")
-      Trick.trigger(obj)
-        .then(() => this.setState({checked: new Set()}))
-        .then(() => this.update()).catch(console.log)
+      return Trick.trigger(obj)
     })
+    return Promise.all(promises)
+      .then(() => this.update()).catch(console.log)
+      .then(() => this.setState({checked: new Set()}))
   }
 
   hard() {
-    this.populateSelectedItems().map(item => {
+    const promises = this.populateSelectedItems().map(item => {
       let obj = Object.assign(item, {})
       obj.trigger_interval = obj.trigger_interval * 2
       obj.trigger_date = moment().day(obj.trigger_interval).format("YYYY-MM-DD")
-      Trick.trigger(obj).then(() => this.update()).catch(console.log)
+      return Trick.trigger(obj)
     })
+    return Promise.all(promises)
+      .then(() => this.update()).catch(console.log)
+      .then(() => this.setState({checked: new Set()}))
   }
 
   good() {
-    this.populateSelectedItems().map(item => {
+    const promises = this.populateSelectedItems().map(item => {
       let obj = Object.assign(item, {})
       let days = obj.trigger_interval * 4
       obj.trigger_interval = days
       obj.trigger_date = moment().day(days).format("YYYY-MM-DD")
-      Trick.trigger(obj).then(() => this.update()).catch(console.log)
+      return Trick.trigger(obj)
     })
+    return Promise.all(promises)
+      .then(() => this.update()).catch(console.log)
+      .then(() => this.setState({checked: new Set()}))
   }
 
   activeActions() {
@@ -166,7 +173,7 @@ export default class InboxScreen extends React.Component {
               </View>)
             } else {
               return (<List dataArray={items}
-                renderRow={(item) => <CheckBoxListItem name={item.name} change={this.toggleChecked(item.id)}/>}
+                renderRow={(item) => <CheckBoxListItem name={Trick.generateTrickName(item)} change={this.toggleChecked(item.id)}/>}
                 />)
             }
           })()}

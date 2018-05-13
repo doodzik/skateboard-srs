@@ -5,7 +5,7 @@ import { Ionicons } from '@expo/vector-icons';
 import RootNavigation from './navigation/RootNavigation';
 import { Root } from "native-base";
 
-import { init } from './src/db';
+import { init, drop } from './src/db';
 
 export default class App extends React.Component {
   state = {
@@ -14,6 +14,7 @@ export default class App extends React.Component {
 
   componentDidMount() {
     init()
+    // drop()
   }
 
   render() {

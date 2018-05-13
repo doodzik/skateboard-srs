@@ -16,7 +16,7 @@ export const Trick = {
     const trigger_interval = 1
     const values           = tricks.map(t => t.concat(trigger_date).concat(trigger_interval))
     const inserts          = tricks.map(_ => '(?,?,?,?,?,?,?)').join(',')
-    
+
     return new Promise((resolve, reject) => {
       db.transaction(tx => {
         tx.executeSql(`insert into tricks (stance_id, prefix_tag_id, name, postfix_tag_id, obstacle_id, trigger_date, trigger_interval) values ${inserts}`, _.flatten(values));
@@ -72,10 +72,18 @@ export const Trick = {
   },
 
   allFuture() {
-    return new Promise((resolve, reject) => {  
+    return new Promise((resolve, reject) => {
       db.transaction(tx => {
         tx.executeSql(
-          `SELECT * FROM tricks WHERE trigger_date > ?;`, [moment().format("YYYY-MM-DD")],
+          `SELECT t.id as id, t.trigger_date as trigger_date, t.trigger_interval as trigger_interval,
+              t.name as name, s.name as stance, preTags.name as prefix_tag, postTags.name as postfix_tag, o.name as obstacle
+            FROM tricks AS t
+            LEFT JOIN stances as s ON s.id=t.stance_id
+            LEFT JOIN tags as postTags ON postTags.id=t.postfix_tag_id
+            LEFT JOIN tags as preTags ON preTags.id=t.prefix_tag_id
+            LEFT JOIN obstacles as o ON o.id=t.obstacle_id
+            WHERE t.trigger_date > ?;`
+          , [moment().format("YYYY-MM-DD")],
           (_, { rows: { _array } }) => {
             resolve(_array)
           })
@@ -84,7 +92,7 @@ export const Trick = {
   },
 
   allByName() {
-    return new Promise((resolve, reject) => {  
+    return new Promise((resolve, reject) => {
       db.transaction(tx => {
         tx.executeSql(
           `SELECT * FROM tricks GROUP BY name;`, [],
@@ -96,14 +104,22 @@ export const Trick = {
   },
 
   allTriggered() {
-    return new Promise((resolve, reject) => {  
+    return new Promise((resolve, reject) => {
       db.transaction(tx => {
         tx.executeSql(
-          `SELECT * FROM tricks WHERE trigger_date <= ?;`, [moment().format("YYYY-MM-DD")],
+          `SELECT t.id as id, t.trigger_date as trigger_date, t.trigger_interval as trigger_interval,
+              t.name as name, s.name as stance, preTags.name as prefix_tag, postTags.name as postfix_tag, o.name as obstacle
+            FROM tricks AS t
+            LEFT JOIN stances as s ON s.id=t.stance_id
+            LEFT JOIN tags as postTags ON postTags.id=t.postfix_tag_id
+            LEFT JOIN tags as preTags ON preTags.id=t.prefix_tag_id
+            LEFT JOIN obstacles as o ON o.id=t.obstacle_id
+            WHERE t.trigger_date <= ?;`
+          , [moment().format("YYYY-MM-DD")],
           (_, { rows: { _array } }) => {
             resolve(_array)
           });
-      });
+      }, reject);
     })
   },
 
@@ -115,6 +131,11 @@ export const Trick = {
       return !earlier.find(e => _.isEquals(e, n))
     })
     return {deleted, created}
+  },
+
+  generateTrickName({ name, stance, prefix_tag, postfix_tag, obstacle }) {
+    getName = n => n == '<empty>' ? '' : n
+    return [ getName(stance), getName(prefix_tag), name, getName(postfix_tag), getName(obstacle)].join(' ').trim().replace(/\s{2,}/g, ' ')
   },
 
   generateTricksName({ name, stances, prefix_tags, postfix_tags, obstacles }) {
@@ -147,8 +168,8 @@ export const Trick = {
   }
 }
 
-export const Tag = nameBasedTable('tags') 
-export const Obstacle = nameBasedTable('obstacles') 
+export const Tag = nameBasedTable('tags')
+export const Obstacle = nameBasedTable('obstacles')
 
 // TODO refactor to use pname and name internally
 function nameBasedTable(tableName) {
@@ -211,7 +232,7 @@ function nameBasedTable(tableName) {
     },
 
     all() {
-      return new Promise((resolve, reject) => {  
+      return new Promise((resolve, reject) => {
         db.transaction(tx => {
           tx.executeSql(`SELECT * FROM ${tableName};`, [], (_, { rows: { _array } }) => resolve(_array))
         })
@@ -227,7 +248,7 @@ export const Stance = {
   },
 
   all() {
-    return new Promise((resolve, reject) => {  
+    return new Promise((resolve, reject) => {
       db.transaction(tx => {
         tx.executeSql(`SELECT * FROM stances;`, [], (_, { rows: { _array } }) => resolve(_array))
       })
@@ -241,6 +262,7 @@ export function drop () {
     tx.executeSql('drop table stances;')
     tx.executeSql('drop table tags;')
     tx.executeSql('drop table obstacles;')
+    // tx.executeSql('DROP DATABASE db;')
   })
 }
 

@@ -95,8 +95,7 @@ export default class InboxScreen extends React.Component {
           arr.push(<Separator key={key} ><Text>{item.trigger_date}</Text></Separator>)
           key++
         }
-        // TODO generate proper trick name
-        arr.push(<CheckBoxListItem key={key} name={item.name} change={this.toggleChecked(item.id)}/>)
+        arr.push(<CheckBoxListItem key={key} name={Trick.generateTrickName(item)} change={this.toggleChecked(item.id)}/>)
         key++
       }
     }
