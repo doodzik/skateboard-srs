@@ -48,13 +48,24 @@ export default class TrickDetailComponent extends Component {
   updateDependencyData() {
     const myFirstPromise = new Promise((resolve, reject) => {
       if (!this.isNewTrick()) {
-          
+        const params = this.props.navigation.state.params || {}
+        const name = params.trickName || ''
+        Trick.findByName(name).then(_array => {
+          const rows = _array['_array']
+          resolve({
+            stances: rows.reduce((set, value) => { return set.add(value.stance_id) }, new Set()),
+            preTags: rows.reduce((set, value) => { return set.add(value.prefix_tag_id) }, new Set()),
+            postTags: rows.reduce((set, value) => { return set.add(value.postfix_tag_id) }, new Set()),
+            obstacles: rows.reduce((set, value) => { return set.add(value.obstacle_id) }, new Set()),
+          })
+        })
+      } else {
+        resolve({})
       }
-      // postTags: new Set([1]), 
     })
-    Promise.all([Tag.all(), Obstacle.all(), Stance.all()]).then(vals => {
-      const [depTags, depObst, depStance] = vals
-      this.setState({depTags, depObst, depStance})
+    Promise.all([Tag.all(), Obstacle.all(), Stance.all(), myFirstPromise]).then(vals => {
+      const [depTags, depObst, depStance, defaults] = vals
+      this.setState(Object.assign({depTags, depObst, depStance}, defaults))
     })
   }
 

@@ -61,7 +61,7 @@ export const Trick = {
     })
   },
 
-  findByName(name, cb) {
+  findByName(name) {
     return new Promise((resolve, reject) => {
       db.transaction(tx => {
         tx.executeSql('SELECT * FROM tricks WHERE name=?', [name], (_, { rows }) => {
@@ -195,17 +195,11 @@ function nameBasedTable(tableName) {
     },
 
     update(name, newName) {
-      return this.findByName(name)
-        .then(data => data._array[0].id)
-        .then(id => {
         return new Promise((resolve, reject) => {
           db.transaction(tx => {
-            // TODO verify that this works
-            // TODO verify that it works with where name instead of id
-            tx.executeSql(`UPDATE ${tableName} SET name = ? WHERE id = ?;`, [newName, id])
+            tx.executeSql(`UPDATE ${tableName} SET name = ? WHERE name = ?;`, [newName, name])
           }, reject, resolve,)
         })
-      })
     },
 
     delete(name) {
