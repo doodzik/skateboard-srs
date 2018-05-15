@@ -24,21 +24,45 @@ export const Trick = {
     })
   },
 
-  update(name, data, cb) {
-    db.transaction(
-      tx => {
-        tx.executeSql('UPDATE tricks SET name = ? WHERE name = ?' [data.name, name])
-        tx.executeSql('select name, stances, prefix_tags, postfix_tags, obstacles from tricks where name=?', [name], (_, { rows }) => {
+  update(name, data) {
+    return new Promise((resolve, reject) => {
+      db.transaction(tx => {
+        tx.executeSql('select name, stance_id, prefix_tag_id, postfix_tag_id, obstacle_id from tricks where name=?', [name], (_, { rows: { _array } }) => {
           let newer = this.generateTricksDBValues(data)
-          let {deleted, created} = this.diffTrick(earlier, newer)
-          this.createFn(created, () => {
-            deleted
+          let earlier = this.generateTricksDBValuesFromSelect(_array)
+          resolve(this.diffTrick(earlier, newer))
+        })
+      }, reject, resolve,)
+    }).then(({created, deleted}) => {
+      return new Promise((resolve, reject) => {
+        db.transaction(tx => {
+          deleted.forEach(trick => {
+            tx.executeSql('DELETE FROM tricks WHERE stance_id=? AND prefix_tag_id=? AND name=? AND postfix_tag_id=? AND obstacle_id=?;', trick)
           })
-        });
-      },
-      console.log,
-      cb,
-    );
+        }, reject, () => resolve(created))
+      })
+    }).then(created => {
+      return new Promise((resolve, reject) => {
+        db.transaction(tx => {
+          const trigger_date     = moment().format("YYYY-MM-DD")
+          const trigger_interval = 1
+          const values           = created.map(t => t.concat(trigger_date).concat(trigger_interval))
+          const inserts          = created.map(_ => '(?,?,?,?,?,?,?)').join(',')
+
+          tx.executeSql(`insert into tricks (stance_id, prefix_tag_id, name, postfix_tag_id, obstacle_id, trigger_date, trigger_interval) values ${inserts}`, _.flatten(values));
+        }, reject, resolve)
+      })
+    }).then(() => {
+      return new Promise((resolve, reject) => {
+        if (data.name !== name) {
+          db.transaction(tx => {
+            tx.executeSql('UPDATE tricks SET name = ? WHERE name = ?', [data.name, name])
+          }, reject, resolve)
+        } else {
+          resolve()
+        }
+      })
+    })
   },
 
   trigger(obj) {
@@ -64,8 +88,8 @@ export const Trick = {
   findByName(name) {
     return new Promise((resolve, reject) => {
       db.transaction(tx => {
-        tx.executeSql('SELECT * FROM tricks WHERE name=?', [name], (_, { rows }) => {
-          resolve(rows)
+        tx.executeSql('SELECT * FROM tricks WHERE name=?', [name], (_, { rows: { _array } }) => {
+          resolve(_array)
         })
       }, reject)
     })
@@ -125,10 +149,10 @@ export const Trick = {
 
   diffTrick(earlier, newer) {
     const deleted = earlier.filter(e => {
-      return !newer.find(n => _.isEquals(e, n))
+      return !newer.find(n => _.isEqual(e, n))
     })
     const created = newer.filter(n => {
-      return !earlier.find(e => _.isEquals(e, n))
+      return !earlier.find(e => _.isEqual(e, n))
     })
     return {deleted, created}
   },
@@ -165,7 +189,26 @@ export const Trick = {
       })
     })
     return arr
-  }
+  },
+
+  generateTricksDBValuesFromSelect(rows) {
+    const stances = rows.reduce((set, value) => { return set.add(value.stance_id) }, new Set())
+    const prefix_tags = rows.reduce((set, value) => { return set.add(value.prefix_tag_id) }, new Set())
+    const postfix_tags = rows.reduce((set, value) => { return set.add(value.postfix_tag_id) }, new Set())
+    const obstacles = rows.reduce((set, value) => { return set.add(value.obstacle_id) }, new Set())
+
+    let arr = []
+    stances.forEach(stance => {
+      prefix_tags.forEach(prefix_tag => {
+        postfix_tags.forEach(postfix_tag => {
+          obstacles.forEach(obstacle => {
+            arr.push([stance, prefix_tag, rows[0].name, postfix_tag, obstacle])
+          })
+        })
+      })
+    })
+    return arr
+  },
 }
 
 export const Tag = nameBasedTable('tags')
@@ -237,8 +280,8 @@ function nameBasedTable(tableName) {
 
 export const Stance = {
   init(tx) {
-      tx.executeSql('create table if not exists stances (id integer primary key not null, name text UNIQUE);')
-      tx.executeSql(`INSERT OR IGNORE INTO stances (name) values (?), (?), (?), (?)`, ['<empty>', 'Nolli', 'Switch', 'Fakie']);
+    tx.executeSql('create table if not exists stances (id integer primary key not null, name text UNIQUE);')
+    tx.executeSql(`INSERT OR IGNORE INTO stances (name) values (?), (?), (?), (?)`, ['<empty>', 'Nolli', 'Switch', 'Fakie']);
   },
 
   all() {

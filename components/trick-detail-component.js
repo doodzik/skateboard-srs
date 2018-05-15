@@ -2,6 +2,7 @@ import React, { Component } from 'react';
 import { Alert } from 'react-native';
 import { Separator, Button, Icon, Container, Header, Content, Form, Item, Input, Label, Text, List, ListItem, CheckBox, Body } from 'native-base';
 import moment from 'moment'
+import _ from 'lodash'
 
 import { Trick, Tag, Obstacle, Stance } from '../src/db';
 
@@ -25,6 +26,7 @@ export default class TrickDetailComponent extends Component {
     depTags: [],
     depObst: [],
     depStance: [],
+    initialLoad: true,
   };
 
   constructor(props) {
@@ -39,6 +41,7 @@ export default class TrickDetailComponent extends Component {
       payload => {
         if (payload.action.type == "Navigation/BACK") {
           this.updateDependencyData()
+          this.updateState({})
         }
       }
     );
@@ -47,16 +50,16 @@ export default class TrickDetailComponent extends Component {
 
   updateDependencyData() {
     const myFirstPromise = new Promise((resolve, reject) => {
-      if (!this.isNewTrick()) {
+      if (!this.isNewTrick() && this.state.initialLoad) {
         const params = this.props.navigation.state.params || {}
         const name = params.trickName || ''
-        Trick.findByName(name).then(_array => {
-          const rows = _array['_array']
+        Trick.findByName(name).then(rows => {
           resolve({
             stances: rows.reduce((set, value) => { return set.add(value.stance_id) }, new Set()),
             preTags: rows.reduce((set, value) => { return set.add(value.prefix_tag_id) }, new Set()),
             postTags: rows.reduce((set, value) => { return set.add(value.postfix_tag_id) }, new Set()),
             obstacles: rows.reduce((set, value) => { return set.add(value.obstacle_id) }, new Set()),
+            initialLoad: false,
           })
         })
       } else {
@@ -109,21 +112,33 @@ export default class TrickDetailComponent extends Component {
     const params = this.props.navigation.state.params || {}
     const initName = params.trickName || ''
 
-    Trick.update(initName, data, () => this.props.navigation.goBack())
+    Trick.update(initName, data).then(() => this.props.navigation.goBack())
   }
 
   validate (state) {
-    // TODO: at least one prefix & postfix & stance & obstacle
-    var valid = true
-    if (!this.isNewTrick()) {
-      const params = this.props.navigation.state.params || {}
-      const name = params.trickName
-      valid = name != state.name
-    }
-    valid = valid && state.name.length > 0
-
+    var validName = true
+    var validConfig = false
     Trick.findByName(state.name).then((rows) => {
-      valid = valid && rows.length < 1
+      validName = validName && state.name.length > 0
+      validName = validName && rows.length < 1
+
+      if (!this.isNewTrick()) {
+        const params = this.props.navigation.state.params || {}
+        const name = params.trickName
+        validName = validName && name != state.name
+
+
+        const stances = rows.reduce((set, value) => { return set.add(value.stance_id) }, new Set())
+        const preTags = rows.reduce((set, value) => { return set.add(value.prefix_tag_id) }, new Set())
+        const postTags = rows.reduce((set, value) => { return set.add(value.postfix_tag_id) }, new Set())
+        const obstacles = rows.reduce((set, value) => { return set.add(value.obstacle_id) }, new Set())
+
+        validConfig = !_.isEqual(this.state.stances, stances)
+                || !_.isEqual(this.state.preTags, preTags)
+                || !_.isEqual(this.state.postTags, postTags)
+                || !_.isEqual(this.state.obstacles, obstacles)
+      }
+      valid = validName || validConfig
       this.setState({valid})
     })
   }
