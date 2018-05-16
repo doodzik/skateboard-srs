@@ -7,7 +7,7 @@ import _ from 'lodash'
 // return new Promise((resolve, reject) => {
 export const Trick = {
   init(tx) {
-      tx.executeSql('create table if not exists tricks (id integer primary key not null, name text, trigger_date DATE, trigger_interval int, stance_id int, prefix_tag_id int, postfix_tag_id int, obstacle_id int);');
+      tx.executeSql('create table if not exists tricks (id integer primary key not null, name text, trigger_date DATE, trigger_interval int, stance_id int, pretag_id int, posttag_id int, obstacle_id int);');
   },
 
   create(data) {
@@ -19,7 +19,7 @@ export const Trick = {
 
     return new Promise((resolve, reject) => {
       db.transaction(tx => {
-        tx.executeSql(`insert into tricks (stance_id, prefix_tag_id, name, postfix_tag_id, obstacle_id, trigger_date, trigger_interval) values ${inserts}`, _.flatten(values));
+        tx.executeSql(`insert into tricks (stance_id, pretag_id, name, posttag_id, obstacle_id, trigger_date, trigger_interval) values ${inserts}`, _.flatten(values));
       }, reject, resolve,);
     })
   },
@@ -27,7 +27,7 @@ export const Trick = {
   update(name, data) {
     return new Promise((resolve, reject) => {
       db.transaction(tx => {
-        tx.executeSql('select name, stance_id, prefix_tag_id, postfix_tag_id, obstacle_id from tricks where name=?', [name], (_, { rows: { _array } }) => {
+        tx.executeSql('select name, stance_id, pretag_id, posttag_id, obstacle_id from tricks where name=?', [name], (_, { rows: { _array } }) => {
           let newer = this.generateTricksDBValues(data)
           let earlier = this.generateTricksDBValuesFromSelect(_array)
           resolve(this.diffTrick(earlier, newer))
@@ -37,7 +37,7 @@ export const Trick = {
       return new Promise((resolve, reject) => {
         db.transaction(tx => {
           deleted.forEach(trick => {
-            tx.executeSql('DELETE FROM tricks WHERE stance_id=? AND prefix_tag_id=? AND name=? AND postfix_tag_id=? AND obstacle_id=?;', trick)
+            tx.executeSql('DELETE FROM tricks WHERE stance_id=? AND pretag_id=? AND name=? AND posttag_id=? AND obstacle_id=?;', trick)
           })
         }, reject, () => resolve(created))
       })
@@ -49,7 +49,7 @@ export const Trick = {
           const values           = created.map(t => t.concat(trigger_date).concat(trigger_interval))
           const inserts          = created.map(_ => '(?,?,?,?,?,?,?)').join(',')
 
-          tx.executeSql(`insert into tricks (stance_id, prefix_tag_id, name, postfix_tag_id, obstacle_id, trigger_date, trigger_interval) values ${inserts}`, _.flatten(values));
+          tx.executeSql(`insert into tricks (stance_id, pretag_id, name, posttag_id, obstacle_id, trigger_date, trigger_interval) values ${inserts}`, _.flatten(values));
         }, reject, resolve)
       })
     }).then(() => {
@@ -103,8 +103,8 @@ export const Trick = {
               t.name as name, s.name as stance, preTags.name as prefix_tag, postTags.name as postfix_tag, o.name as obstacle
             FROM tricks AS t
             LEFT JOIN stances as s ON s.id=t.stance_id
-            LEFT JOIN tags as postTags ON postTags.id=t.postfix_tag_id
-            LEFT JOIN tags as preTags ON preTags.id=t.prefix_tag_id
+            LEFT JOIN posttags as postTags ON postTags.id=t.posttag_id
+            LEFT JOIN pretags as preTags ON preTags.id=t.pretag_id
             LEFT JOIN obstacles as o ON o.id=t.obstacle_id
             WHERE t.trigger_date > ?;`
           , [moment().format("YYYY-MM-DD")],
@@ -135,8 +135,8 @@ export const Trick = {
               t.name as name, s.name as stance, preTags.name as prefix_tag, postTags.name as postfix_tag, o.name as obstacle
             FROM tricks AS t
             LEFT JOIN stances as s ON s.id=t.stance_id
-            LEFT JOIN tags as postTags ON postTags.id=t.postfix_tag_id
-            LEFT JOIN tags as preTags ON preTags.id=t.prefix_tag_id
+            LEFT JOIN posttags as postTags ON postTags.id=t.posttag_id
+            LEFT JOIN pretags as preTags ON preTags.id=t.pretag_id
             LEFT JOIN obstacles as o ON o.id=t.obstacle_id
             WHERE t.trigger_date <= ?;`
           , [moment().format("YYYY-MM-DD")],
@@ -193,8 +193,8 @@ export const Trick = {
 
   generateTricksDBValuesFromSelect(rows) {
     const stances = rows.reduce((set, value) => { return set.add(value.stance_id) }, new Set())
-    const prefix_tags = rows.reduce((set, value) => { return set.add(value.prefix_tag_id) }, new Set())
-    const postfix_tags = rows.reduce((set, value) => { return set.add(value.postfix_tag_id) }, new Set())
+    const prefix_tags = rows.reduce((set, value) => { return set.add(value.pretag_id) }, new Set())
+    const postfix_tags = rows.reduce((set, value) => { return set.add(value.posttag_id) }, new Set())
     const obstacles = rows.reduce((set, value) => { return set.add(value.obstacle_id) }, new Set())
 
     let arr = []
@@ -211,7 +211,8 @@ export const Trick = {
   },
 }
 
-export const Tag = nameBasedTable('tags')
+export const PreTag = nameBasedTable('pretags')
+export const PostTag = nameBasedTable('posttags')
 export const Obstacle = nameBasedTable('obstacles')
 
 // TODO refactor to use pname and name internally
@@ -297,7 +298,8 @@ export function drop () {
   db.transaction(tx => {
     tx.executeSql('drop table tricks;')
     tx.executeSql('drop table stances;')
-    tx.executeSql('drop table tags;')
+    tx.executeSql('drop table posttags;')
+    tx.executeSql('drop table pretags;')
     tx.executeSql('drop table obstacles;')
     // tx.executeSql('DROP DATABASE db;')
   })
@@ -306,7 +308,8 @@ export function drop () {
 export function init () {
   db.transaction(tx => {
     Trick.init(tx)
-    Tag.init(tx)
+    PreTag.init(tx)
+    PostTag.init(tx)
     Stance.init(tx)
     Obstacle.init(tx)
   })

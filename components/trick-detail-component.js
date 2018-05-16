@@ -4,7 +4,7 @@ import { Separator, Button, Icon, Container, Header, Content, Form, Item, Input,
 import moment from 'moment'
 import _ from 'lodash'
 
-import { Trick, Tag, Obstacle, Stance } from '../src/db';
+import { Trick, PostTag, PreTag, Obstacle, Stance } from '../src/db';
 
 export default class TrickDetailComponent extends Component {
   static navigationOptions = ({ navigation }) => {
@@ -23,7 +23,8 @@ export default class TrickDetailComponent extends Component {
     preTags: new Set([1]),
     postTags: new Set([1]), 
     obstacles: new Set([1]),
-    depTags: [],
+    depPreTags: [],
+    depPostTags: [],
     depObst: [],
     depStance: [],
     initialLoad: true,
@@ -66,9 +67,9 @@ export default class TrickDetailComponent extends Component {
         resolve({})
       }
     })
-    Promise.all([Tag.all(), Obstacle.all(), Stance.all(), myFirstPromise]).then(vals => {
-      const [depTags, depObst, depStance, defaults] = vals
-      this.setState(Object.assign({depTags, depObst, depStance}, defaults))
+    Promise.all([PreTag.all(), PostTag.all(), Obstacle.all(), Stance.all(), myFirstPromise]).then(vals => {
+      const [depPreTags, depPostTags, depObst, depStance, defaults] = vals
+      this.setState(Object.assign({depPreTags, depPostTags, depObst, depStance}, defaults))
     })
   }
 
@@ -79,8 +80,8 @@ export default class TrickDetailComponent extends Component {
   }
 
   save() {
-    const prefix_tags = this.state.depTags.filter(t => this.state.preTags.has(t.id))
-    const postfix_tags = this.state.depTags.filter(t => this.state.postTags.has(t.id))
+    const prefix_tags = this.state.depPreTags.filter(t => this.state.preTags.has(t.id))
+    const postfix_tags = this.state.depPostTags.filter(t => this.state.postTags.has(t.id))
     const obstacles = this.state.depObst.filter(t => this.state.obstacles.has(t.id))
     const stances = this.state.depStance.filter(t => this.state.stances.has(t.id))
     const name = this.state.name
@@ -157,7 +158,7 @@ export default class TrickDetailComponent extends Component {
   }
 
   preTags(ids) {
-    const preTags = this.state.depTags
+    const preTags = this.state.depPreTags
     if (typeof ids === 'undefined') {
       return preTags
     } else {
@@ -166,7 +167,7 @@ export default class TrickDetailComponent extends Component {
   }
 
   postTags(ids) {
-    const postTags = this.state.depTags
+    const postTags = this.state.depPostTags
     if (typeof ids === 'undefined') {
       return postTags
     } else {
@@ -184,8 +185,8 @@ export default class TrickDetailComponent extends Component {
   }
 
   generateTrickNames() {
-    const prefix_tags = this.state.depTags.filter(t => this.state.preTags.has(t.id))
-    const postfix_tags = this.state.depTags.filter(t => this.state.postTags.has(t.id))
+    const prefix_tags = this.state.depPreTags.filter(t => this.state.preTags.has(t.id))
+    const postfix_tags = this.state.depPostTags.filter(t => this.state.postTags.has(t.id))
     const obstacles = this.state.depObst.filter(t => this.state.obstacles.has(t.id))
     const stances = this.state.depStance.filter(t => this.state.stances.has(t.id))
     const name = this.state.name
