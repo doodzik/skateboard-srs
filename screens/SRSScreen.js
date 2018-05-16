@@ -19,7 +19,7 @@ import CheckBoxListItem from '../components/checkbox';
 export default class InboxScreen extends React.Component {
   static navigationOptions = ({ navigation }) => {
     return {
-      title: 'SRS',
+      title: 'Current',
     }
   }
 

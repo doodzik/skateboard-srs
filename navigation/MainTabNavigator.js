@@ -38,22 +38,22 @@ export default TabNavigator(
           case 'Inbox':
             iconName =
               Platform.OS === 'ios'
-                ? `ios-information-circle${focused ? '' : '-outline'}`
-                : 'md-information-circle';
+                ? `ios-filing${focused ? '' : '-outline'}`
+                : 'ios-filing';
             break;
           case 'FutureTricks':
-            iconName = Platform.OS === 'ios' ? `ios-link${focused ? '' : '-outline'}` : 'md-link';
+            iconName = Platform.OS === 'ios' ? `ios-calendar${focused ? '' : '-outline'}` : 'ios-calendar';
             break;
           case 'Tricks':
-            iconName = Platform.OS === 'ios' ? `ios-link${focused ? '' : '-outline'}` : 'md-link';
+            iconName = Platform.OS === 'ios' ? `ios-create${focused ? '' : '-outline'}` : 'ios-create';
             break;
           case 'Tags':
             iconName =
-              Platform.OS === 'ios' ? `ios-options${focused ? '' : '-outline'}` : 'md-options';
+              Platform.OS === 'ios' ? `ios-pricetags${focused ? '' : '-outline'}` : 'ios-pricetags';
             break;
           case 'Obstacles':
             iconName =
-              Platform.OS === 'ios' ? `ios-options${focused ? '' : '-outline'}` : 'md-options';
+              Platform.OS === 'ios' ? `ios-pin${focused ? '' : '-outline'}` : 'ios-pin';
             break;
         }
         return (

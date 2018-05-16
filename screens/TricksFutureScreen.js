@@ -19,7 +19,7 @@ import CheckBoxListItem from '../components/checkbox';
 export default class InboxScreen extends React.Component {
   static navigationOptions = ({ navigation }) => {
     return {
-      title: 'Future Tricks',
+      title: 'Upcoming',
     }
   }
 
@@ -105,7 +105,7 @@ export default class InboxScreen extends React.Component {
         <Header>
           <Left/>
           <Body>
-            <Title>Future Tricks</Title>
+            <Title>Upcoming</Title>
           </Body>
           <Right>
             <Button transparent onPress={() => this.now()} disabled={!this.activeActions()}>
