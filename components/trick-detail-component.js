@@ -57,8 +57,8 @@ export default class TrickDetailComponent extends Component {
         Trick.findByName(name).then(rows => {
           resolve({
             stances: rows.reduce((set, value) => { return set.add(value.stance_id) }, new Set()),
-            preTags: rows.reduce((set, value) => { return set.add(value.prefix_tag_id) }, new Set()),
-            postTags: rows.reduce((set, value) => { return set.add(value.postfix_tag_id) }, new Set()),
+            preTags: rows.reduce((set, value) => { return set.add(value.pretag_id) }, new Set()),
+            postTags: rows.reduce((set, value) => { return set.add(value.posttag_id) }, new Set()),
             obstacles: rows.reduce((set, value) => { return set.add(value.obstacle_id) }, new Set()),
             initialLoad: false,
           })
@@ -130,8 +130,8 @@ export default class TrickDetailComponent extends Component {
 
 
         const stances = rows.reduce((set, value) => { return set.add(value.stance_id) }, new Set())
-        const preTags = rows.reduce((set, value) => { return set.add(value.prefix_tag_id) }, new Set())
-        const postTags = rows.reduce((set, value) => { return set.add(value.postfix_tag_id) }, new Set())
+        const preTags = rows.reduce((set, value) => { return set.add(value.pretag_id) }, new Set())
+        const postTags = rows.reduce((set, value) => { return set.add(value.posttag_id) }, new Set())
         const obstacles = rows.reduce((set, value) => { return set.add(value.obstacle_id) }, new Set())
 
         validConfig = !_.isEqual(this.state.stances, stances)
@@ -185,11 +185,11 @@ export default class TrickDetailComponent extends Component {
   }
 
   generateTrickNames() {
-    const prefix_tags = this.state.depPreTags.filter(t => this.state.preTags.has(t.id))
+    const prefix_tags  = this.state.depPreTags.filter(t => this.state.preTags.has(t.id))
     const postfix_tags = this.state.depPostTags.filter(t => this.state.postTags.has(t.id))
-    const obstacles = this.state.depObst.filter(t => this.state.obstacles.has(t.id))
-    const stances = this.state.depStance.filter(t => this.state.stances.has(t.id))
-    const name = this.state.name
+    const obstacles    = this.state.depObst.filter(t => this.state.obstacles.has(t.id))
+    const stances      = this.state.depStance.filter(t => this.state.stances.has(t.id))
+    const name         = this.state.name
 
     return Trick.generateTricksName({ name, stances, prefix_tags, postfix_tags, obstacles }).map(e => e.join(' ').trim().replace(/\s{2,}/g, ' '))
   }
