@@ -156,6 +156,37 @@ function screenCreator(dbInstance) {
       const name = params.name
       const isProtectedTag = !this.isNew() && name === '<empty>'
 
+      return (
+        <Container>
+          <Content>
+            <Form>
+              <Item floatingLabel>
+                <Label>{dbInstance.name} Name</Label>
+                <Input
+                   value={this.state.name}
+                  onChangeText={name => this.updateState({ name })}
+                  />
+              </Item>
+              {(() => {
+                if (isProtectedTag) {
+                  const message = 'You cannot remove the <empty> ' + dbInstance.name
+                  return <Body><Text>{message}</Text></Body>
+                } else {
+                  return <Button full disabled={!this.state.valid} onPress={() => this.save()} > <Text>Save</Text></Button>
+                }
+              })()}
+              {(() => {
+                if (isProtectedTag) {
+                  return
+                }
+                if (!this.isNew()) {
+                  return <Button full danger onPress={() => this.delete()} > <Text>delete</Text> </Button>
+                }
+              })()}
+            </Form>
+          </Content>
+        </Container>
+      );
     }
   }
 

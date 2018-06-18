@@ -44,7 +44,13 @@ export default class InboxScreen extends React.Component {
   }
 
   update() {
-    Trick.allFuture().then(items => this.setState({ items }))
+    Trick.allFuture()
+      .then(items => {
+        return new Promise((resolve, reject) => {
+          this.setState({ items: [] }, () => resolve(items))
+        })
+      })
+      .then(items => this.setState({ items }))
   }
 
   toggleChecked(id) {
@@ -81,17 +87,17 @@ export default class InboxScreen extends React.Component {
   render() {
     const { items } = this.state;
     let {height} = Dimensions.get('window');
-    height = height * 0.8 
+    height = height * 0.8
 
     if (items !== null) {
       var arr = []
       var lastdate = ''
       var key = 0
-      for (var i = 0; i < items.length; i++) { 
+      for (var i = 0; i < items.length; i++) {
         let item = items[i]
         arr.push
         if (item.trigger_date !== lastdate) {
-          lastdate = item.trigger_date 
+          lastdate = item.trigger_date
           arr.push(<Separator key={key} ><Text>{item.trigger_date}</Text></Separator>)
           key++
         }
@@ -99,7 +105,7 @@ export default class InboxScreen extends React.Component {
         key++
       }
     }
-    
+
     return (
       <Container>
         <Header>

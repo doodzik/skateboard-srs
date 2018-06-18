@@ -44,7 +44,13 @@ export default class InboxScreen extends React.Component {
   }
 
   update() {
-    return Trick.allTriggered().then(items => this.setState({ items }))
+    return Trick.allTriggered()
+      .then(items => {
+        return new Promise((resolve, reject) => {
+          this.setState({ items: [] }, () => resolve(items))
+        })
+      })
+      .then(items => this.setState({ items }))
   }
 
   toggleChecked(id) {
