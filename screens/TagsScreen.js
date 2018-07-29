@@ -202,7 +202,7 @@ function screenCreator(dbInstance, dbInstance1) {
                   const message = 'You cannot remove the <empty> ' + dbInstance.name
                   return <Body><Text>{message}</Text></Body>
                 } else {
-                  return <Button full disabled={!this.state.valid} onPress={() => this.save()} > <Text>Save</Text></Button>
+                  return <Button full style={{marginTop: 5}} disabled={!this.state.valid} onPress={() => this.save()} > <Text>Save</Text></Button>
                 }
               })()}
               {(() => {
@@ -210,7 +210,7 @@ function screenCreator(dbInstance, dbInstance1) {
                   return
                 }
                 if (!this.isNew()) {
-                  return <Button full danger onPress={() => this.delete()} > <Text>delete</Text> </Button>
+                  return <Button full danger style={{marginTop: 5}} onPress={() => this.delete()} > <Text>Delete</Text> </Button>
                 }
               })()}
             </Form>
@@ -320,7 +320,7 @@ function screenCreator(dbInstance, dbInstance1) {
                   const message = 'You cannot remove the <empty> ' + dbInstance1.name
                   return <Body><Text>{message}</Text></Body>
                 } else {
-                  return <Button full disabled={!this.state.valid} onPress={() => this.save()} > <Text>Save</Text></Button>
+                  return <Button full disabled={!this.state.valid} style={{marginTop: 5}} onPress={() => this.save()} > <Text>Save</Text></Button>
                 }
               })()}
               {(() => {
@@ -328,7 +328,7 @@ function screenCreator(dbInstance, dbInstance1) {
                   return
                 }
                 if (!this.isNew()) {
-                  return <Button full danger onPress={() => this.delete()} > <Text>delete</Text> </Button>
+                  return <Button full danger style={{marginTop: 5}} onPress={() => this.delete()} > <Text>Delete</Text> </Button>
                 }
               })()}
             </Form>

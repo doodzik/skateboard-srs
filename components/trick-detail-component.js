@@ -21,7 +21,7 @@ export default class TrickDetailComponent extends Component {
     name: '',
     stances: new Set([1, 2, 3, 4]),
     preTags: new Set([1]),
-    postTags: new Set([1]), 
+    postTags: new Set([1]),
     obstacles: new Set([1]),
     depPreTags: [],
     depPostTags: [],
@@ -79,14 +79,18 @@ export default class TrickDetailComponent extends Component {
     return name === ''
   }
 
-  save() {
+  getTrickData() {
     const prefix_tags = this.state.depPreTags.filter(t => this.state.preTags.has(t.id))
     const postfix_tags = this.state.depPostTags.filter(t => this.state.postTags.has(t.id))
     const obstacles = this.state.depObst.filter(t => this.state.obstacles.has(t.id))
     const stances = this.state.depStance.filter(t => this.state.stances.has(t.id))
     const name = this.state.name
 
-    const data = { prefix_tags, postfix_tags, obstacles, stances, name }
+    return { prefix_tags, postfix_tags, obstacles, stances, name }
+  }
+
+  save() {
+    const data = this.getTrickData()
     // https://stackoverflow.com/questions/4205181/insert-into-a-mysql-table-or-update-if-exists
     return this.isNewTrick() ? this.create(data) : this.update(data)
   }
@@ -97,7 +101,7 @@ export default class TrickDetailComponent extends Component {
 
   delete() {
     const params = this.props.navigation.state.params || {}
-    const initName = params.trickName 
+    const initName = params.trickName
     Alert.alert(
       'Delete Trick',
       initName,
@@ -184,16 +188,6 @@ export default class TrickDetailComponent extends Component {
     }
   }
 
-  generateTrickNames() {
-    const prefix_tags  = this.state.depPreTags.filter(t => this.state.preTags.has(t.id))
-    const postfix_tags = this.state.depPostTags.filter(t => this.state.postTags.has(t.id))
-    const obstacles    = this.state.depObst.filter(t => this.state.obstacles.has(t.id))
-    const stances      = this.state.depStance.filter(t => this.state.stances.has(t.id))
-    const name         = this.state.name
-
-    return Trick.generateTricksName({ name, stances, prefix_tags, postfix_tags, obstacles }).map(e => e.join(' ').trim().replace(/\s{2,}/g, ' '))
-  }
-
   render() {
     const stancesSelector = {
       items: this.stances(),
@@ -221,14 +215,6 @@ export default class TrickDetailComponent extends Component {
       selected: this.state.obstacles,
       onDone: (obstacles) => this.setState({obstacles}),
       title: 'Obstacles',
-    }
-
-    var generatedTricks;
-    generatedTricks = [<ListItem><Text>Generated Tricks</Text></ListItem>]
-    if (this.state.name.length === 0) {
-      generatedTricks = [<ListItem key={0}><Text>Enter a trick name to see all generated tricks</Text></ListItem>]
-    } else {
-      generatedTricks = this.generateTrickNames().map((name, i) => <ListItem key={i}><Text>{name}</Text></ListItem>)
     }
 
     return (
@@ -264,19 +250,24 @@ export default class TrickDetailComponent extends Component {
               <Text>{this.obstacles(this.state.obstacles).map(x => x.name).join(', ')}</Text>
             </ListItem>
 
-            <Button full 
+            <Button full
+              style={{marginTop: 5}}
               disabled={!this.state.valid}
               onPress={() => this.save()} >
               <Text>Save</Text>
             </Button>
             {(() => {
               if (!this.isNewTrick()) {
-                return <Button full danger onPress={() => this.delete()} > <Text>delete</Text> </Button> 
+                return <Button full danger style={{marginTop: 5}} onPress={() => this.delete()} > <Text>Delete</Text> </Button>
               }
             })()}
-              <Separator><Text>Generated Tricks</Text></Separator>
-              {generatedTricks}
-            </List>
+            <Button full
+              style={{marginTop: 5}}
+              disabled={this.state.name.length == 0}
+              onPress={() => this.props.navigation.navigate('TricksPreview', this.getTrickData())}>
+              <Text>Preview</Text>
+            </Button>
+          </List>
         </Content>
       </Container>
     );

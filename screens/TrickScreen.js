@@ -18,6 +18,7 @@ import {
 
 import { StackNavigator } from 'react-navigation'
 import TrickDetail from '../components/trick-detail-component'
+import TricksPreview from '../components/tricks-preview-component'
 import Selector from '../components/selector'
 import { View, Dimensions } from 'react-native';
 
@@ -112,5 +113,6 @@ class TrickScreen extends Component {
 export default StackNavigator({
   TrickScreen: { screen: TrickScreen },
   TrickDetail: { screen: TrickDetail },
+  TricksPreview: { screen: TricksPreview },
   Selector: { screen: Selector },
 });
