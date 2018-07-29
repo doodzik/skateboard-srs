@@ -1,19 +1,15 @@
 {
   "expo": {
-    "name": "skateboard-srs",
-    "description": "A very interesting project.",
+    "name": "SRS",
+    "description": "Homespot is a Skateboard SRS that helps you in learning all the tricks you want to learn.",
     "slug": "skateboard-srs",
-    "privacy": "public",
+    "privacy": "unlisted",
     "sdkVersion": "27.0.0",
     "platforms": ["ios", "android"],
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
-    "splash": {
-      "image": "./assets/images/splash.png",
-      "resizeMode": "contain",
-      "backgroundColor": "#ffffff"
-    },
+    "primaryColor": "#ffffff",
     "updates": {
       "fallbackToCacheTimeout": 0
     },
@@ -22,6 +18,17 @@
     ],
     "ios": {
       "supportsTablet": true
+      "bundleIdentifier": "co.dudzik.homespot",
+      "buildNumber": "1",
+      "config": {
+        "usesNonExemptEncryption": false,
+      }
+    },
+    "android": {
+      "package": "co.dudzik.homespot",
+      "versionCode": 1,
+      "permissions": [],
+      "config": {}
     }
   }
 }
