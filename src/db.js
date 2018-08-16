@@ -26,14 +26,27 @@ export const Trick = {
 
   update(name, data) {
     return new Promise((resolve, reject) => {
-      db.transaction(tx => {
-        tx.executeSql('select name, stance_id, pretag_id, posttag_id, obstacle_id from tricks where name=?', [name], (_, { rows: { _array } }) => {
-          let newer = this.generateTricksDBValues(data)
-          let earlier = this.generateTricksDBValuesFromSelect(_array)
-          resolve(this.diffTrick(earlier, newer))
-        })
-      }, reject, resolve,)
+      if (data.name !== name) {
+        db.transaction(tx => {
+          tx.executeSql('UPDATE tricks SET name = ? WHERE name = ?', [data.name, name])
+        }, reject, resolve)
+      } else {
+        resolve()
+      }
+    }).then(() => {
+      return new Promise((resolve, reject) => {
+        db.transaction(tx => {
+          tx.executeSql('select name, stance_id, pretag_id, posttag_id, obstacle_id from tricks where name=?', [data.name], (_, { rows: { _array } }) => {
+            let newer = this.generateTricksDBValues(data)
+            let earlier = this.generateTricksDBValuesFromSelect(_array)
+            resolve(this.diffTrick(earlier, newer))
+          })
+        }, reject, resolve,)
+      })
     }).then(({created, deleted}) => {
+      if(deleted.length === 0) {
+        return created
+      }
       return new Promise((resolve, reject) => {
         db.transaction(tx => {
           deleted.forEach(trick => {
@@ -42,6 +55,9 @@ export const Trick = {
         }, reject, () => resolve(created))
       })
     }).then(created => {
+      if(created.length === 0) {
+        return
+      }
       return new Promise((resolve, reject) => {
         db.transaction(tx => {
           const trigger_date     = moment().format("YYYY-MM-DD")
@@ -51,16 +67,6 @@ export const Trick = {
 
           tx.executeSql(`insert into tricks (stance_id, pretag_id, name, posttag_id, obstacle_id, trigger_date, trigger_interval) values ${inserts}`, _.flatten(values));
         }, reject, resolve)
-      })
-    }).then(() => {
-      return new Promise((resolve, reject) => {
-        if (data.name !== name) {
-          db.transaction(tx => {
-            tx.executeSql('UPDATE tricks SET name = ? WHERE name = ?', [data.name, name])
-          }, reject, resolve)
-        } else {
-          resolve()
-        }
       })
     })
   },
