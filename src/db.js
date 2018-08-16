@@ -106,7 +106,8 @@ export const Trick = {
             LEFT JOIN posttags as postTags ON postTags.id=t.posttag_id
             LEFT JOIN pretags as preTags ON preTags.id=t.pretag_id
             LEFT JOIN obstacles as o ON o.id=t.obstacle_id
-            WHERE t.trigger_date > ?;`
+            WHERE t.trigger_date > ?
+            ORDER BY date(t.trigger_date) ASC;`
           , [moment().format("YYYY-MM-DD")],
           (_, { rows: { _array } }) => {
             resolve(_array)
