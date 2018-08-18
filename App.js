@@ -1,6 +1,6 @@
 import React from 'react';
 import { Platform, StatusBar, StyleSheet, View } from 'react-native';
-import { AppLoading, Asset, Font } from 'expo';
+import { AppLoading, Asset, Font, Constants } from 'expo';
 import { Ionicons } from '@expo/vector-icons';
 import RootNavigation from './navigation/RootNavigation';
 import { Root } from "native-base";
@@ -30,6 +30,7 @@ export default class App extends React.Component {
       return (
         <Root>
           {Platform.OS === 'ios' && <StatusBar barStyle="default" />}
+          {Platform.OS === 'android' && <View style={{backgroundColor: "#C2185B", height: Constants.statusBarHeight}} />}
           <RootNavigation />
         </Root>
       );
@@ -48,6 +49,9 @@ export default class App extends React.Component {
         // We include SpaceMono because we use it in HomeScreen.js. Feel free
         // to remove this if you are not using it in your app
         'space-mono': require('./assets/fonts/SpaceMono-Regular.ttf'),
+
+        // make nativebase work
+        'Roboto_medium': require("native-base/Fonts/Roboto_medium.ttf"),
       }),
     ]);
   };
@@ -60,7 +64,7 @@ export default class App extends React.Component {
 
   _handleFinishLoading = () => {
     this.setState({ isLoadingComplete: true });
-  };
+  }
 }
 
 const styles = StyleSheet.create({
