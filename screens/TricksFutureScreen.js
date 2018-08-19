@@ -123,7 +123,7 @@ export default class InboxScreen extends React.Component {
           {(() => {
             if (items === null || items.length === 0) {
               return (<View style={{ flex: 1, height, justifyContent: 'center', alignItems: 'center' }}>
-                <Text>No Tricks to do in the Future!</Text>
+                <Text style={{textAlign: "center",}}>Mark your tricks as skip, hard, or good for them to be scheduled in the future.</Text>
               </View>)
             } else {
               return <List> {arr} </List>

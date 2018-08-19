@@ -88,7 +88,7 @@ class TrickScreen extends Component {
             if (items === null || items.length === 0) {
               return (
                 <View style={{ flex: 1, height, justifyContent: 'center', alignItems: 'center' }}>
-                  <Text>No Trics yet</Text>
+                  <Text style={{textAlign: "center",}}>Click on the + in the top right corner to add new tricks.</Text>
                 </View>
               )
             } else {

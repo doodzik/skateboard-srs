@@ -218,20 +218,22 @@ export const Trick = {
   },
 }
 
-export const PreTag = nameBasedTable('pretags')
-export const PostTag = nameBasedTable('posttags')
-export const Obstacle = nameBasedTable('obstacles')
+export const PreTag = nameBasedTable('pretags', ['<empty>', 'fs', 'bs', 'fs 180', 'bs 180'])
+export const PostTag = nameBasedTable('posttags', ['<empty>', 'fs 180', 'bs 180', 'popout', 'popover'])
+export const Obstacle = nameBasedTable('obstacles', ['<empty>', 'ledge', 'hip', 'rail'])
 
 // TODO refactor to use pname and name internally
-function nameBasedTable(tableName) {
+function nameBasedTable(tableName, defaultValues) {
   const singularName = singular(_.capitalize(tableName))
   const singularLowerName = singular(_.lowerCase(tableName))
-  const pluralName   = plural(_.capitalize(tableName))
+  const pluralName = plural(_.capitalize(tableName))
 
   return {
     init(tx) {
+      const inserts = defaultValues.map(_ => '(?)').join(',')
+
       tx.executeSql(`CREATE TABLE IF NOT EXISTS ${tableName} (id INTEGER PRIMARY KEY NOT NULL, name TEXT UNIQUE);`)
-      tx.executeSql(`INSERT OR IGNORE INTO ${tableName} (name) VALUES (?)`, ['<empty>']);
+      tx.executeSql(`INSERT OR IGNORE INTO ${tableName} (name) VALUES ${inserts}`, defaultValues);
     },
 
     name: singularName,
@@ -279,7 +281,7 @@ function nameBasedTable(tableName) {
     all() {
       return new Promise((resolve, reject) => {
         db.transaction(tx => {
-          tx.executeSql(`SELECT * FROM ${tableName};`, [], (_, { rows: { _array } }) => resolve(_array))
+          tx.executeSql(`SELECT * FROM ${tableName} ORDER BY name;`, [], (_, { rows: { _array } }) => resolve(_array))
         })
       })
     },

@@ -26,6 +26,7 @@ export default class InboxScreen extends React.Component {
   state = {
     items: null,
     checked: new Set(),
+    newUser: false,
   };
 
   constructor(props) {
@@ -51,6 +52,9 @@ export default class InboxScreen extends React.Component {
         })
       })
       .then(items => this.setState({ items }))
+      .then(() => Trick.allByName())
+      .then(tricks => tricks.length === 0)
+      .then(newUser => this.setState({newUser}))
   }
 
   toggleChecked(id) {
@@ -66,7 +70,6 @@ export default class InboxScreen extends React.Component {
       _self.setState({checked})
     }
   }
-
 
   populateSelectedItems() {
     let checked = this.state.checked
@@ -173,9 +176,13 @@ export default class InboxScreen extends React.Component {
         </Header>
         <Content>
           {(() => {
-            if (items === null || items.length === 0) {
+            if (this.state.newUser) {
               return (<View style={{ flex: 1, height, justifyContent: 'center', alignItems: 'center' }}>
-                <Text>All Done!</Text>
+                <Text style={{textAlign: "center",}}>You don't have any tricks yet. Navigate to the tricks tab add new ones.</Text>
+              </View>)
+            } else if (items === null || items.length === 0) {
+              return (<View style={{ flex: 1, height, justifyContent: 'center', alignItems: 'center' }}>
+                <Text>All done!</Text>
               </View>)
             } else {
               return (<List dataArray={items}
