@@ -1,10 +1,10 @@
-import React, { Component } from 'react';
-import { Alert } from 'react-native';
-import { Separator, Button, Icon, Container, Header, Content, Form, Item, Input, Label, Text, List, ListItem, CheckBox, Body } from 'native-base';
+import React, { Component } from 'react'
+import { Alert } from 'react-native'
+import { Separator, Button, Icon, Container, Header, Content, Form, Item, Input, Label, Text, List, ListItem, CheckBox, Body } from 'native-base'
 import moment from 'moment'
 import _ from 'lodash'
 
-import { Trick, PostTag, PreTag, Obstacle, Stance } from '../src/db';
+import { Trick, PostTag, PreTag, Obstacle, Stance } from '../src/db'
 
 export default class TrickDetailComponent extends Component {
   static navigationOptions = ({ navigation }) => {
@@ -33,7 +33,7 @@ export default class TrickDetailComponent extends Component {
     return (
       <Container>
         <Content>
-          <List> {generatedTricks} </List>
+          <List>{generatedTricks}</List>
         </Content>
       </Container>
     );

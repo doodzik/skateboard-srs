@@ -126,12 +126,12 @@ export default class InboxScreen extends React.Component {
                 <Text style={{textAlign: "center",}}>Mark your tricks as skip, hard, or good for them to be scheduled in the future.</Text>
               </View>)
             } else {
-              return <List> {arr} </List>
+              return <List>{arr}</List>
             }
           })()}
         </Content>
       </Container>
-    );
+    )
   }
 }
 

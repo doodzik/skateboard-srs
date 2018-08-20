@@ -258,7 +258,7 @@ export default class TrickDetailComponent extends Component {
             </Button>
             {(() => {
               if (!this.isNewTrick()) {
-                return <Button full danger style={{marginTop: 5}} onPress={() => this.delete()} > <Text>Delete</Text> </Button>
+                return <Button full danger style={{marginTop: 5}} onPress={() => this.delete()} ><Text>Delete</Text></Button>
               }
             })()}
             <Button full

@@ -157,23 +157,41 @@ export default class InboxScreen extends React.Component {
 
     return (
       <Container>
-        <Header>
-          <Left>
-            <Button transparent onPress={() => this.activeSheet()} disabled={!this.activeActions()}>
-              <Text>Skip</Text>
-            </Button>
-          </Left>
-          <Body>
-            <Button transparent onPress={() => this.hard()} disabled={!this.activeActions()}>
-              <Text>Hard</Text>
-            </Button>
-          </Body>
-          <Right>
-            <Button transparent onPress={() => this.good()} disabled={!this.activeActions()}>
-              <Text>Good</Text>
-            </Button>
-          </Right>
-        </Header>
+          {(() => {
+          if (Platform.OS === 'ios') {
+            return(<Header noLeft>
+              <Left>
+                <Button transparent onPress={() => this.activeSheet()} disabled={!this.activeActions()}>
+                  <Text>Skip</Text>
+                </Button>
+              </Left>
+              <Body>
+                <Button transparent onPress={() => this.hard()} disabled={!this.activeActions()}>
+                  <Text>Hard</Text>
+                </Button>
+              </Body>
+              <Right>
+                <Button transparent onPress={() => this.good()} disabled={!this.activeActions()}>
+                  <Text>Good</Text>
+                </Button>
+              </Right>
+            </Header>)
+          } else {
+            return(<Header noLeft>
+              <Right>
+                <Button transparent onPress={() => this.activeSheet()} disabled={!this.activeActions()}>
+                  <Text>Skip</Text>
+                </Button>
+                <Button transparent onPress={() => this.hard()} disabled={!this.activeActions()}>
+                  <Text>Hard</Text>
+                </Button>
+                <Button transparent onPress={() => this.good()} disabled={!this.activeActions()}>
+                  <Text>Good</Text>
+                </Button>
+              </Right>
+            </Header>)
+          }
+          })()}
         <Content>
           {(() => {
             if (this.state.newUser) {

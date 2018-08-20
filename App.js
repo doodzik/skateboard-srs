@@ -1,16 +1,16 @@
-import React from 'react';
-import { Platform, StatusBar, StyleSheet, View } from 'react-native';
-import { AppLoading, Asset, Font, Constants } from 'expo';
-import { Ionicons } from '@expo/vector-icons';
-import RootNavigation from './navigation/RootNavigation';
-import { Root } from "native-base";
+import React from 'react'
+import { Platform, StatusBar, StyleSheet, View } from 'react-native'
+import { AppLoading, Asset, Font, Constants } from 'expo'
+import { Ionicons } from '@expo/vector-icons'
+import RootNavigation from './navigation/RootNavigation'
+import { Root } from "native-base"
 
-import { init, drop } from './src/db';
+import { init, drop } from './src/db'
 
 export default class App extends React.Component {
   state = {
     isLoadingComplete: false,
-  };
+  }
 
   componentDidMount() {
     init()

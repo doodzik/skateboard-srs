@@ -172,15 +172,15 @@ function screenCreator(dbInstance) {
                   const message = 'You cannot remove the <empty> ' + dbInstance.name
                   return <Body><Text>{message}</Text></Body>
                 } else {
-                  return <Button full style={{marginTop: 5}} disabled={!this.state.valid} onPress={() => this.save()} > <Text>Save</Text></Button>
+                  return <Button full style={{marginTop: 5}} disabled={!this.state.valid} onPress={() => this.save()} ><Text>Save</Text></Button>
                 }
               })()}
               {(() => {
                 if (isProtectedTag) {
-                  return
+                  return null
                 }
                 if (!this.isNew()) {
-                  return <Button full danger style={{marginTop: 5}} onPress={() => this.delete()} > <Text>Delete</Text> </Button>
+                  return <Button full danger style={{marginTop: 5}} onPress={() => this.delete()} ><Text>Delete</Text></Button>
                 }
               })()}
             </Form>
