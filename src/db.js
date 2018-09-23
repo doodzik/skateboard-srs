@@ -291,7 +291,8 @@ function nameBasedTable(tableName, defaultValues) {
 export const Stance = {
   init(tx) {
     tx.executeSql('create table if not exists stances (id integer primary key not null, name text UNIQUE);')
-    tx.executeSql(`INSERT OR IGNORE INTO stances (name) values (?), (?), (?), (?)`, ['<empty>', 'Nolli', 'Switch', 'Fakie']);
+    tx.executeSql(`UPDATE stances SET name = 'Nollie' WHERE name = 'Nolli';`, []);
+    tx.executeSql(`INSERT OR IGNORE INTO stances (name) values (?), (?), (?), (?)`, ['<empty>', 'Nollie', 'Switch', 'Fakie']);
   },
 
   all() {

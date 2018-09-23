@@ -133,7 +133,7 @@ export default class InboxScreen extends React.Component {
       .then(() => this.setState({checked: new Set()}))
   }
 
-  good() {
+  easy() {
     const promises = this.populateSelectedItems().map(item => {
       let obj = Object.assign(item, {})
       let days = obj.trigger_interval * 4
@@ -171,8 +171,8 @@ export default class InboxScreen extends React.Component {
                 </Button>
               </Body>
               <Right>
-                <Button transparent onPress={() => this.good()} disabled={!this.activeActions()}>
-                  <Text>Good</Text>
+                <Button transparent onPress={() => this.easy()} disabled={!this.activeActions()}>
+                  <Text>Easy</Text>
                 </Button>
               </Right>
             </Header>)
@@ -185,8 +185,8 @@ export default class InboxScreen extends React.Component {
                 <Button transparent onPress={() => this.hard()} disabled={!this.activeActions()}>
                   <Text>Hard</Text>
                 </Button>
-                <Button transparent onPress={() => this.good()} disabled={!this.activeActions()}>
-                  <Text>Good</Text>
+                <Button transparent onPress={() => this.easy()} disabled={!this.activeActions()}>
+                  <Text>Easy</Text>
                 </Button>
               </Right>
             </Header>)
